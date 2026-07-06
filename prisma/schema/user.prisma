@@ -1,0 +1,20 @@
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      UserRole
+  status    UserStatus @default(ACTIVE)
+  avatarUrl String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Provider side
+  gearItems GearItem[]
+
+  // Customer side
+  rentalOrders RentalOrder[]
+  reviews      Review[]
+
+  @@map("users")
+}
