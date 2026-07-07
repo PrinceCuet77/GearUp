@@ -8,6 +8,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { adminRoutes } from './modules/admin/admin.routes';
 import { providerRoutes } from './modules/provider/provider.routes';
+import { gearRoutes } from './modules/gear/gear.routes';
 
 const app: Application = express();
 
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/provider', providerRoutes);
+app.use('/api/gears', gearRoutes);
 
 app.use(notFound);
 
