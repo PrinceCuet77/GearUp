@@ -10,7 +10,7 @@ import {
 } from '../../errors/ApiError';
 import { jwtUtils } from '../../utils/jwt';
 import { SignOptions } from 'jsonwebtoken';
-import { UserStatus } from '../../../generated/prisma/enums';
+import { UserRole, UserStatus } from '../../../generated/prisma/enums';
 
 const registerUserIntoDB = async (payload: IRegistrationUserPayload) => {
   const { email, password, role } = payload;
@@ -94,7 +94,41 @@ const loginUser = async (payload: ILoginUserPayload) => {
   };
 };
 
+const refreshToken = async (refreshToken: string) => {
+  const verifiedRefreshToken = jwtUtils.verifyToken(
+    refreshToken,
+    config.jwt_refresh_secret,
+  );
+
+  if (!verifiedRefreshToken.success) {
+    throw new UnauthorizedError('Invalid refresh token');
+  }
+
+  const { userId, email, role } = verifiedRefreshToken.data as {
+    userId: string;
+    email: string;
+    role: UserRole;
+  };
+
+  const jwtPayload = {
+    userId,
+    email,
+    role,
+  };
+
+  const accessToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt_access_secret,
+    config.jwt_access_expires_in as SignOptions,
+  );
+
+  return {
+    accessToken,
+  };
+};
+
 export const authService = {
   registerUserIntoDB,
   loginUser,
+  refreshToken,
 };
