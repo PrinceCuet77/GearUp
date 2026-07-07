@@ -14,6 +14,19 @@ const getAllUserDetails = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getUserDetailsById = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId as string;
+  const user = await adminService.getUserDetailsById(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'User details retrieved successfully',
+    data: user,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
+  getUserDetailsById,
 };
