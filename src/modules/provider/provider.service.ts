@@ -1,4 +1,4 @@
-import { Prisma } from '../../../generated/prisma/client';
+import { Prisma, RentalStatus } from '../../../generated/prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   NotFoundError,
@@ -9,6 +9,7 @@ import {
   ICreateGearPayload,
   IUpdateGearPayload,
   IGetProviderGearQuery,
+  IGetProviderOrdersQuery,
 } from './provider.interface';
 
 const createGear = async (providerId: string, payload: ICreateGearPayload) => {
@@ -162,8 +163,92 @@ const updateGear = async (
   return updated;
 };
 
+const getProviderOrders = async (
+  providerId: string,
+  query: IGetProviderOrdersQuery,
+) => {
+  const { status, page = 1, limit = 10 } = query;
+
+  const where: Prisma.RentalOrderWhereInput = {
+    items: {
+      some: {
+        gearItem: {
+          providerId,
+        },
+      },
+    },
+  };
+
+  if (status) {
+    where.status = status as RentalStatus;
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [orders, total] = await Promise.all([
+    prisma.rentalOrder.findMany({
+      where,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        items: {
+          where: {
+            gearItem: {
+              providerId,
+            },
+          },
+          include: {
+            gearItem: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                images: true,
+              },
+            },
+          },
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            method: true,
+            paidAt: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: Number(limit),
+    }),
+    prisma.rentalOrder.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / Number(limit));
+
+  return {
+    data: orders,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages,
+    },
+  };
+};
+
 export const providerService = {
   createGear,
   getUserSpecificProviderGear,
   updateGear,
+  getProviderOrders,
 };

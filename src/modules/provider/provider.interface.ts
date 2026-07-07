@@ -27,3 +27,9 @@ export interface IGetProviderGearQuery {
   sortBy?: 'name' | 'price' | 'createdAt' | 'stock';
   sortOrder?: 'asc' | 'desc';
 }
+
+export interface IGetProviderOrdersQuery {
+  status?: string;
+  page?: number;
+  limit?: number;
+}

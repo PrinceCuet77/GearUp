@@ -1,4 +1,4 @@
-import { Prisma } from '../../../generated/prisma/client';
+import { Prisma, RentalStatus } from '../../../generated/prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   NotFoundError,
@@ -141,7 +141,7 @@ const getCustomerRentals = async (
   };
 
   if (status) {
-    where.status = status as any;
+    where.status = status as RentalStatus;
   }
 
   const skip = (Number(page) - 1) * Number(limit);

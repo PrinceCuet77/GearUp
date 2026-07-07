@@ -27,4 +27,10 @@ router.patch(
   providerController.updateGear,
 );
 
+router.get(
+  '/orders',
+  auth(UserRole.PROVIDER),
+  providerController.getProviderOrders,
+);
+
 export const providerRoutes = router;
