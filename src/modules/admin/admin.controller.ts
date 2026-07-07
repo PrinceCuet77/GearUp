@@ -26,7 +26,22 @@ const getUserDetailsById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.params.userId as string;
+  const { status } = req.body;
+
+  const user = await adminService.updateUserStatus(userId, status);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'User status updated successfully',
+    data: user,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
+  updateUserStatus,
 };
