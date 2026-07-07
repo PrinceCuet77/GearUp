@@ -117,7 +117,53 @@ const getUserSpecificProviderGear = async (
   };
 };
 
+const updateGear = async (
+  providerId: string,
+  gearId: string,
+  payload: IUpdateGearPayload,
+) => {
+  const gear = await prisma.gearItem.findUnique({
+    where: { id: gearId },
+  });
+
+  if (!gear) {
+    throw new NotFoundError('Gear item not found');
+  }
+
+  if (gear.providerId !== providerId) {
+    throw new ForbiddenError('You are not authorized to update this gear item');
+  }
+
+  if (payload.categoryId) {
+    const category = await prisma.category.findUnique({
+      where: { id: payload.categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundError('Category not found');
+    }
+  }
+
+  const updated = await prisma.gearItem.update({
+    where: { id: gearId },
+    data: payload,
+    include: {
+      category: true,
+      provider: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return updated;
+};
+
 export const providerService = {
   createGear,
   getUserSpecificProviderGear,
+  updateGear,
 };

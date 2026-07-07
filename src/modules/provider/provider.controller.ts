@@ -35,7 +35,21 @@ const getUserSpecificProviderGear = catchAsync(
   },
 );
 
+const updateGear = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const gearId = req.params.gearId as string;
+  const gear = await providerService.updateGear(providerId, gearId, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Gear item updated successfully',
+    data: gear,
+  });
+});
+
 export const providerController = {
   createGear,
   getUserSpecificProviderGear,
+  updateGear,
 };

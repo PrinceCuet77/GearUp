@@ -3,7 +3,7 @@ import { auth } from '../../middleware/auth';
 import { UserRole } from '../../../generated/prisma/enums';
 import { providerController } from './provider.controller';
 import { validate } from '../../middleware/validate';
-import { createGearSchema } from './provider.validation';
+import { createGearSchema, updateGearSchema } from './provider.validation';
 
 const router = Router();
 
@@ -18,6 +18,13 @@ router.post(
   auth(UserRole.PROVIDER),
   validate(createGearSchema),
   providerController.createGear,
+);
+
+router.patch(
+  '/gear/:gearId',
+  auth(UserRole.PROVIDER),
+  validate(updateGearSchema),
+  providerController.updateGear,
 );
 
 export const providerRoutes = router;
