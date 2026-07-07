@@ -6,6 +6,7 @@ import { validate } from '../../middleware/validate';
 import {
   updateUserStatusSchema,
   createCategorySchema,
+  updateCategorySchema,
 } from './admin.validation';
 
 const router = Router();
@@ -30,6 +31,13 @@ router.post(
   auth(UserRole.ADMIN),
   validate(createCategorySchema),
   adminController.createCategory,
+);
+
+router.patch(
+  '/categories/:categoryId',
+  auth(UserRole.ADMIN),
+  validate(updateCategorySchema),
+  adminController.updateCategory,
 );
 
 export const adminRoutes = router;
