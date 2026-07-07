@@ -40,8 +40,20 @@ const updateUserStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createCategory = catchAsync(async (req: Request, res: Response) => {
+  const category = await adminService.createCategory(req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 201,
+    message: 'Category created successfully',
+    data: category,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
   updateUserStatus,
+  createCategory,
 };

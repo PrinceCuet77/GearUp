@@ -47,8 +47,25 @@ const updateUserStatus = async (userId: string, status: UserStatus) => {
   return updatedUser;
 };
 
+const createCategory = async (data: { name: string; description?: string }) => {
+  const existingCategory = await prisma.category.findUnique({
+    where: { name: data.name },
+  });
+
+  if (existingCategory) {
+    throw new ApiError(409, 'Category with this name already exists');
+  }
+
+  const category = await prisma.category.create({
+    data,
+  });
+
+  return category;
+};
+
 export const adminService = {
   getAllUsers,
   getUserDetailsById,
   updateUserStatus,
+  createCategory,
 };
