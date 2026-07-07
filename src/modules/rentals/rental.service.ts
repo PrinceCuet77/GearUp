@@ -193,7 +193,58 @@ const getCustomerRentals = async (
   };
 };
 
+const getRentalById = async (rentalId: string, customerId: string) => {
+  const rental = await prisma.rentalOrder.findUnique({
+    where: { id: rentalId },
+    include: {
+      items: {
+        include: {
+          gearItem: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              images: true,
+              category: true,
+              provider: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      payments: true,
+      reviews: true,
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!rental) {
+    throw new NotFoundError('Rental order not found');
+  }
+
+  if (rental.customerId !== customerId) {
+    throw new ForbiddenError(
+      'You are not authorized to view this rental order',
+    );
+  }
+
+  return rental;
+};
+
 export const rentalService = {
   createRental,
   getCustomerRentals,
+  getRentalById,
 };

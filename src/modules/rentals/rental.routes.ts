@@ -24,4 +24,10 @@ router.get(
   rentalController.getCustomerRentals,
 );
 
+router.get(
+  '/:rentalId',
+  auth(UserRole.CUSTOMER, UserRole.ADMIN),
+  rentalController.getRentalById,
+);
+
 export const rentalRoutes = router;
