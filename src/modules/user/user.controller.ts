@@ -16,7 +16,10 @@ const getUserDetails = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
-  const user = await userService.updateMyProfileInDB(req.user?.userId!, req.body);
+  const user = await userService.updateMyProfileInDB(
+    req.user?.userId!,
+    req.body,
+  );
 
   sendResponse(res, {
     success: true,
@@ -26,7 +29,19 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const changeMyPassword = catchAsync(async (req: Request, res: Response) => {
+  await userService.changeMyPasswordInDB(req.user?.userId!, req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Password changed successfully',
+    data: null,
+  });
+});
+
 export const userController = {
   getUserDetails,
   updateMyProfile,
+  changeMyPassword,
 };
