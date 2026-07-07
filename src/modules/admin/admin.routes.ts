@@ -40,4 +40,10 @@ router.patch(
   adminController.updateCategory,
 );
 
+router.get(
+  '/categories/:categoryId',
+  auth(UserRole.ADMIN),
+  adminController.getCategoryById,
+);
+
 export const adminRoutes = router;

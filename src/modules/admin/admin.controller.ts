@@ -63,10 +63,23 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCategoryById = catchAsync(async (req: Request, res: Response) => {
+  const categoryId = req.params.categoryId as string;
+  const category = await adminService.getCategoryById(categoryId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Category details retrieved successfully',
+    data: category,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
   updateUserStatus,
   createCategory,
   updateCategory,
+  getCategoryById,
 };

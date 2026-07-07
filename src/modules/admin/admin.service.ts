@@ -99,10 +99,26 @@ const updateCategory = async (
   return updatedCategory;
 };
 
+const getCategoryById = async (categoryId: string) => {
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    include: {
+      gearItems: true,
+    },
+  });
+
+  if (!category) {
+    throw new NotFoundError('Category not found');
+  }
+
+  return category;
+};
+
 export const adminService = {
   getAllUsers,
   getUserDetailsById,
   updateUserStatus,
   createCategory,
   updateCategory,
+  getCategoryById,
 };
