@@ -36,7 +36,30 @@ const getAllGears = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getGearReviews = catchAsync(async (req: Request, res: Response) => {
+  const { gearId } = req.params;
+  const gear = await gearService.getGearById(gearId as string);
+
+  if (!gear) {
+    throw new NotFoundError('Gear item not found');
+  }
+
+  const result = await gearService.getGearReviews(
+    gearId as string,
+    req.query as any,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Reviews retrieved successfully',
+    data: result.reviews,
+    meta: result.meta,
+  });
+});
+
 export const gearController = {
   getGearById,
   getAllGears,
+  getGearReviews,
 };

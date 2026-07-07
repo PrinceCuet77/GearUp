@@ -1,6 +1,6 @@
 import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../lib/prisma';
-import { IGetAllGearsQuery } from './gear.interface';
+import { IGetAllGearsQuery, IGetGearReviewsQuery } from './gear.interface';
 
 const getAllGears = async (query: IGetAllGearsQuery) => {
   const {
@@ -112,7 +112,55 @@ const getGearById = async (gearId: string) => {
   return gear;
 };
 
+const getGearReviews = async (gearId: string, query: IGetGearReviewsQuery) => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = query;
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [reviews, total] = await Promise.all([
+    prisma.review.findMany({
+      where: {
+        gearItemId: gearId,
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+      skip,
+      take: Number(limit),
+    }),
+    prisma.review.count({
+      where: {
+        gearItemId: gearId,
+      },
+    }),
+  ]);
+
+  return {
+    reviews,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+    },
+  };
+};
+
 export const gearService = {
   getAllGears,
   getGearById,
+  getGearReviews,
 };
