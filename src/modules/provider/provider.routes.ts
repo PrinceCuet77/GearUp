@@ -7,6 +7,12 @@ import { createGearSchema } from './provider.validation';
 
 const router = Router();
 
+router.get(
+  '/gears',
+  auth(UserRole.PROVIDER, UserRole.ADMIN),
+  providerController.getUserSpecificProviderGear,
+);
+
 router.post(
   '/gear',
   auth(UserRole.PROVIDER),

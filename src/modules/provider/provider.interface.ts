@@ -16,3 +16,14 @@ export interface IUpdateGearPayload {
   categoryId?: string;
   isActive?: boolean;
 }
+
+export interface IGetProviderGearQuery {
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'name' | 'price' | 'createdAt' | 'stock';
+  sortOrder?: 'asc' | 'desc';
+}

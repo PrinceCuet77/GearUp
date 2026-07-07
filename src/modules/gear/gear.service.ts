@@ -65,12 +65,15 @@ const getAllGears = async (query: IGetAllGearsQuery) => {
     prisma.gearItem.count({ where }),
   ]);
 
+  const totalPages = Math.ceil(total / Number(limit));
+
   return {
     gears,
     meta: {
       page: Number(page),
       limit: Number(limit),
       total,
+      totalPages,
     },
   };
 };
@@ -149,12 +152,15 @@ const getGearReviews = async (gearId: string, query: IGetGearReviewsQuery) => {
     }),
   ]);
 
+  const totalPages = Math.ceil(total / Number(limit));
+
   return {
     reviews,
     meta: {
       page: Number(page),
       limit: Number(limit),
       total,
+      totalPages,
     },
   };
 };

@@ -4,6 +4,7 @@ import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
 import { gearService } from './gear.service';
 import { NotFoundError } from '../../errors/ApiError';
+import { IGetAllGearsQuery, IGetGearReviewsQuery } from './gear.interface';
 
 const getGearById = catchAsync(async (req: Request, res: Response) => {
   const { gearId } = req.params;
@@ -23,7 +24,7 @@ const getGearById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllGears = catchAsync(async (req: Request, res: Response) => {
-  const result = await gearService.getAllGears(req.query as any);
+  const result = await gearService.getAllGears(req.query as IGetAllGearsQuery);
 
   console.log(req.query);
 
@@ -46,7 +47,7 @@ const getGearReviews = catchAsync(async (req: Request, res: Response) => {
 
   const result = await gearService.getGearReviews(
     gearId as string,
-    req.query as any,
+    req.query as IGetGearReviewsQuery,
   );
 
   sendResponse(res, {

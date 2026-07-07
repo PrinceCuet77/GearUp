@@ -1,10 +1,15 @@
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   NotFoundError,
   ForbiddenError,
   ConflictError,
 } from '../../errors/ApiError';
-import { ICreateGearPayload, IUpdateGearPayload } from './provider.interface';
+import {
+  ICreateGearPayload,
+  IUpdateGearPayload,
+  IGetProviderGearQuery,
+} from './provider.interface';
 
 const createGear = async (providerId: string, payload: ICreateGearPayload) => {
   const category = await prisma.category.findUnique({
@@ -40,6 +45,79 @@ const createGear = async (providerId: string, payload: ICreateGearPayload) => {
   return gear;
 };
 
+const getUserSpecificProviderGear = async (
+  userId: string,
+  query: IGetProviderGearQuery,
+) => {
+  const {
+    category,
+    minPrice,
+    maxPrice,
+    search,
+    page = 1,
+    limit = 10,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = query;
+
+  const where: Prisma.GearItemWhereInput = {
+    providerId: userId,
+  };
+
+  if (category) {
+    where.category = {
+      name: { contains: String(category), mode: 'insensitive' },
+    };
+  }
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.price = {};
+    if (minPrice !== undefined) {
+      where.price.gte = Number(minPrice);
+    }
+    if (maxPrice !== undefined) {
+      where.price.lte = Number(maxPrice);
+    }
+  }
+
+  if (search) {
+    where.OR = [
+      { name: { contains: String(search), mode: 'insensitive' } },
+      { description: { contains: String(search), mode: 'insensitive' } },
+    ];
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.gearItem.findMany({
+      where,
+      include: {
+        category: true,
+      },
+      orderBy: {
+        [sortBy as string]: sortOrder,
+      },
+      skip,
+      take: Number(limit),
+    }),
+    prisma.gearItem.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / Number(limit));
+
+  return {
+    data,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages,
+    },
+  };
+};
+
 export const providerService = {
   createGear,
+  getUserSpecificProviderGear,
 };
