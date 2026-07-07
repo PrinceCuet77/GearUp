@@ -16,9 +16,15 @@ export const validate = (
         .join(', ');
       throw new BadRequestError(errorMessage);
     }
+
     if (source === 'body') {
       req.body = result.data;
+    } else if (source === 'query') {
+      req.query = result.data as any;
+    } else if (source === 'params') {
+      req.params = result.data as any;
     }
+
     next();
   };
 };

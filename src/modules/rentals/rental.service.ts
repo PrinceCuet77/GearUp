@@ -124,6 +124,76 @@ const createRental = async (
   return rentalOrder;
 };
 
+const getCustomerRentals = async (
+  customerId: string,
+  query: IGetCustomerRentalsQuery,
+) => {
+  const {
+    status,
+    page = 1,
+    limit = 10,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = query;
+
+  const where: Prisma.RentalOrderWhereInput = {
+    customerId,
+  };
+
+  if (status) {
+    where.status = status as any;
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [rentals, total] = await Promise.all([
+    prisma.rentalOrder.findMany({
+      where,
+      include: {
+        items: {
+          include: {
+            gearItem: {
+              select: {
+                id: true,
+                name: true,
+                images: true,
+              },
+            },
+          },
+        },
+        payments: {
+          select: {
+            id: true,
+            transactionId: true,
+            amount: true,
+            status: true,
+            paidAt: true,
+          },
+        },
+      },
+      orderBy: {
+        [sortBy as string]: sortOrder,
+      },
+      skip,
+      take: Number(limit),
+    }),
+    prisma.rentalOrder.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / Number(limit));
+
+  return {
+    rentals,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages,
+    },
+  };
+};
+
 export const rentalService = {
   createRental,
+  getCustomerRentals,
 };

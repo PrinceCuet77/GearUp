@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RentalStatus } from '../../../generated/prisma/enums';
 
 const rentalItemSchema = z.object({
   gearItemId: z.string().min(1, 'Gear item ID is required'),
@@ -30,3 +31,14 @@ export const createRentalSchema = z
       path: ['endDate'],
     },
   );
+
+export const getCustomerRentalsQuerySchema = z.object({
+  status: z.nativeEnum(RentalStatus).optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(10),
+  sortBy: z
+    .enum(['createdAt', 'startDate', 'endDate', 'amount'])
+    .optional()
+    .default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+});
