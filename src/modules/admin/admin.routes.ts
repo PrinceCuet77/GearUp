@@ -46,4 +46,10 @@ router.get(
   adminController.getCategoryById,
 );
 
+router.delete(
+  '/categories/:categoryId',
+  auth(UserRole.ADMIN),
+  adminController.deleteCategory,
+);
+
 export const adminRoutes = router;

@@ -99,6 +99,31 @@ const updateCategory = async (
   return updatedCategory;
 };
 
+const deleteCategory = async (categoryId: string) => {
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    include: {
+      gearItems: true,
+    },
+  });
+
+  if (!category) {
+    throw new NotFoundError('Category not found');
+  }
+
+  if (category.gearItems.length > 0) {
+    throw new ConflictError(
+      'Cannot delete category with associated gear items',
+    );
+  }
+
+  await prisma.category.delete({
+    where: { id: categoryId },
+  });
+
+  return category;
+};
+
 const getCategoryById = async (categoryId: string) => {
   const category = await prisma.category.findUnique({
     where: { id: categoryId },
@@ -121,4 +146,5 @@ export const adminService = {
   createCategory,
   updateCategory,
   getCategoryById,
+  deleteCategory,
 };
