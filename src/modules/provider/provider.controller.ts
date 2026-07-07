@@ -86,10 +86,30 @@ const getProviderOrders = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const orderId = req.params.orderId as string;
+  const { status } = req.body;
+
+  const order = await providerService.updateOrderStatus(
+    providerId,
+    orderId,
+    status,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: `Order status updated to '${status}' successfully`,
+    data: order,
+  });
+});
+
 export const providerController = {
   createGear,
   getUserSpecificProviderGear,
   updateGear,
   getProviderOrders,
   getProviderOrderById,
+  updateOrderStatus,
 };

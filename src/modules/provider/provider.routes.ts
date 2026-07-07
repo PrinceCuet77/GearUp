@@ -8,6 +8,8 @@ import {
   updateGearSchema,
   getProviderOrdersQuerySchema,
   getProviderOrderByIdParamSchema,
+  updateOrderStatusParamSchema,
+  updateOrderStatusBodySchema,
 } from './provider.validation';
 
 const router = Router();
@@ -44,6 +46,14 @@ router.get(
   auth(UserRole.PROVIDER, UserRole.ADMIN),
   validate(getProviderOrderByIdParamSchema, 'params'),
   providerController.getProviderOrderById,
+);
+
+router.patch(
+  '/orders/:orderId',
+  auth(UserRole.PROVIDER),
+  validate(updateOrderStatusParamSchema, 'params'),
+  validate(updateOrderStatusBodySchema, 'body'),
+  providerController.updateOrderStatus,
 );
 
 export const providerRoutes = router;

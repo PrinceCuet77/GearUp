@@ -53,3 +53,13 @@ export const getProviderOrdersQuerySchema = z.object({
 export const getProviderOrderByIdParamSchema = z.object({
   orderId: z.string().min(1, 'Order ID is required'),
 });
+
+export const updateOrderStatusParamSchema = z.object({
+  orderId: z.string().min(1, 'Order ID is required'),
+});
+
+export const updateOrderStatusBodySchema = z.object({
+  status: z.nativeEnum(RentalStatus, {
+    error: 'Invalid rental status',
+  }),
+});

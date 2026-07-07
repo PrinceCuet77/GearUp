@@ -33,3 +33,11 @@ export interface IGetProviderOrdersQuery {
   page?: number;
   limit?: number;
 }
+
+export interface IUpdateOrderStatusPayload {
+  status: string;
+}
+
+export interface IUpdateOrderStatusPayload {
+  status: string;
+}

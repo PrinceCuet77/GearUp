@@ -311,10 +311,101 @@ const getProviderOrders = async (
   };
 };
 
+// Valid status transitions for providers
+const PROVIDER_STATUS_TRANSITIONS: Record<string, string[]> = {
+  PLACED: ['CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['PAID', 'CANCELLED'],
+  PAID: ['PICKED_UP'],
+  PICKED_UP: ['RETURNED'],
+};
+
+const updateOrderStatus = async (
+  providerId: string,
+  orderId: string,
+  newStatus: string,
+) => {
+  // Find the order with its items
+  const order = await prisma.rentalOrder.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: {
+          gearItem: {
+            select: {
+              id: true,
+              providerId: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new NotFoundError('Rental order not found');
+  }
+
+  // Verify the provider owns at least one gear item in this order
+  const hasProviderGear = order.items.some(
+    (item) => item.gearItem.providerId === providerId,
+  );
+
+  if (!hasProviderGear) {
+    throw new ForbiddenError(
+      'You are not authorized to update this order. This order does not contain your gear items.',
+    );
+  }
+
+  // Validate the status transition
+  const allowedTransitions = PROVIDER_STATUS_TRANSITIONS[order.status];
+
+  if (!allowedTransitions) {
+    throw new ConflictError(
+      `Order cannot be updated from '${order.status}' status`,
+    );
+  }
+
+  if (!allowedTransitions.includes(newStatus)) {
+    throw new ConflictError(
+      `Cannot transition order from '${order.status}' to '${newStatus}'. Allowed transitions: ${allowedTransitions.join(', ')}`,
+    );
+  }
+
+  // Update the order status
+  const updatedOrder = await prisma.rentalOrder.update({
+    where: { id: orderId },
+    data: { status: newStatus as any },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      items: {
+        include: {
+          gearItem: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return updatedOrder;
+};
+
 export const providerService = {
   createGear,
   getUserSpecificProviderGear,
   updateGear,
   getProviderOrders,
   getProviderOrderById,
+  updateOrderStatus,
 };
