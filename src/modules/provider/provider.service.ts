@@ -163,6 +163,71 @@ const updateGear = async (
   return updated;
 };
 
+const getProviderOrderById = async (
+  providerId: string,
+  orderId: string,
+  role: string,
+) => {
+  const where: Prisma.RentalOrderWhereInput = {
+    id: orderId,
+  };
+
+  // If the user is a provider (not admin), ensure the order contains their gear
+  if (role !== 'ADMIN') {
+    where.items = {
+      some: {
+        gearItem: {
+          providerId,
+        },
+      },
+    };
+  }
+
+  const order = await prisma.rentalOrder.findFirst({
+    where,
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+      items: {
+        where: role !== 'ADMIN' ? { gearItem: { providerId } } : undefined,
+        include: {
+          gearItem: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              images: true,
+              stock: true,
+              isActive: true,
+            },
+          },
+        },
+      },
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          method: true,
+          paidAt: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    throw new NotFoundError('Rental order not found');
+  }
+
+  return order;
+};
+
 const getProviderOrders = async (
   providerId: string,
   query: IGetProviderOrdersQuery,
@@ -251,4 +316,5 @@ export const providerService = {
   getUserSpecificProviderGear,
   updateGear,
   getProviderOrders,
+  getProviderOrderById,
 };

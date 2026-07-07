@@ -51,6 +51,25 @@ const updateGear = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getProviderOrderById = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const role = req.user?.role as string;
+  const orderId = req.params.orderId as string;
+
+  const order = await providerService.getProviderOrderById(
+    providerId,
+    orderId,
+    role,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Rental order retrieved successfully',
+    data: order,
+  });
+});
+
 const getProviderOrders = catchAsync(async (req: Request, res: Response) => {
   const providerId = req.user?.userId as string;
   const result = await providerService.getProviderOrders(
@@ -72,4 +91,5 @@ export const providerController = {
   getUserSpecificProviderGear,
   updateGear,
   getProviderOrders,
+  getProviderOrderById,
 };

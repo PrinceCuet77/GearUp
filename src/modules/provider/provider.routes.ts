@@ -3,7 +3,12 @@ import { auth } from '../../middleware/auth';
 import { UserRole } from '../../../generated/prisma/enums';
 import { providerController } from './provider.controller';
 import { validate } from '../../middleware/validate';
-import { createGearSchema, updateGearSchema } from './provider.validation';
+import {
+  createGearSchema,
+  updateGearSchema,
+  getProviderOrdersQuerySchema,
+  getProviderOrderByIdParamSchema,
+} from './provider.validation';
 
 const router = Router();
 
@@ -30,7 +35,15 @@ router.patch(
 router.get(
   '/orders',
   auth(UserRole.PROVIDER),
+  validate(getProviderOrdersQuerySchema, 'query'),
   providerController.getProviderOrders,
+);
+
+router.get(
+  '/orders/:orderId',
+  auth(UserRole.PROVIDER, UserRole.ADMIN),
+  validate(getProviderOrderByIdParamSchema, 'params'),
+  providerController.getProviderOrderById,
 );
 
 export const providerRoutes = router;
