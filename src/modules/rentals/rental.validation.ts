@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { RentalStatus } from '../../../generated/prisma/enums';
 
+export const cancelRentalParamsSchema = z.object({
+  rentId: z.string().min(1, 'Rental ID is required'),
+});
+
 const rentalItemSchema = z.object({
   gearItemId: z.string().min(1, 'Gear item ID is required'),
   quantity: z.number().int().positive('Quantity must be a positive integer'),

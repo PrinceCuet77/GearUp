@@ -5,6 +5,7 @@ import { rentalController } from './rental.controller';
 import { validate } from '../../middleware/validate';
 import {
   createRentalSchema,
+  cancelRentalParamsSchema,
   getCustomerRentalsQuerySchema,
 } from './rental.validation';
 
@@ -28,6 +29,13 @@ router.get(
   '/:rentalId',
   auth(UserRole.CUSTOMER, UserRole.ADMIN),
   rentalController.getRentalById,
+);
+
+router.patch(
+  '/:rentId/cancel',
+  auth(UserRole.CUSTOMER),
+  validate(cancelRentalParamsSchema),
+  rentalController.cancelRental,
 );
 
 export const rentalRoutes = router;

@@ -193,6 +193,70 @@ const getCustomerRentals = async (
   };
 };
 
+const cancelRental = async (rentalId: string, customerId: string) => {
+  const rental = await prisma.rentalOrder.findUnique({
+    where: { id: rentalId },
+    include: {
+      items: true,
+    },
+  });
+
+  if (!rental) {
+    throw new NotFoundError('Rental order not found');
+  }
+
+  if (rental.customerId !== customerId) {
+    throw new ForbiddenError(
+      'You are not authorized to cancel this rental order',
+    );
+  }
+
+  if (rental.status !== 'PLACED') {
+    throw new BadRequestError(
+      `Cannot cancel rental order with status "${rental.status}". Only orders with status "PLACED" can be cancelled.`,
+    );
+  }
+
+  // Restore stock for each item and mark order as cancelled in a transaction
+  const cancelledOrder = await prisma.$transaction(async (tx) => {
+    // Restore stock for each gear item in the order
+    for (const item of rental.items) {
+      await tx.gearItem.update({
+        where: { id: item.gearItemId },
+        data: {
+          stock: {
+            increment: item.quantity,
+          },
+        },
+      });
+    }
+
+    // Update order status to CANCELLED
+    const updated = await tx.rentalOrder.update({
+      where: { id: rentalId },
+      data: { status: 'CANCELLED' },
+      include: {
+        items: {
+          include: {
+            gearItem: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return updated;
+  });
+
+  return cancelledOrder;
+};
+
 const getRentalById = async (rentalId: string, customerId: string) => {
   const rental = await prisma.rentalOrder.findUnique({
     where: { id: rentalId },
@@ -247,4 +311,5 @@ export const rentalService = {
   createRental,
   getCustomerRentals,
   getRentalById,
+  cancelRental,
 };
