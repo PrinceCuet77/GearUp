@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const getGearByIdSchema = z.object({
+  gearId: z.string().uuid('Invalid gear ID format'),
+});
+
 export const getAllGearsSchema = z.object({
   category: z.string().optional(),
   minPrice: z.coerce.number().positive().optional(),

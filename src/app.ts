@@ -31,7 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/provider', providerRoutes);
-app.use('/api/gears', gearRoutes);
+app.use('/api/gear', gearRoutes);
 
 app.use(notFound);
 

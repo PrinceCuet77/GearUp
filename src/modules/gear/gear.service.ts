@@ -75,6 +75,44 @@ const getAllGears = async (query: IGetAllGearsQuery) => {
   };
 };
 
+const getGearById = async (gearId: string) => {
+  const gear = await prisma.gearItem.findUnique({
+    where: {
+      id: gearId,
+    },
+    include: {
+      category: true,
+      provider: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      reviews: {
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          customer: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
+    },
+  });
+
+  return gear;
+};
+
 export const gearService = {
   getAllGears,
+  getGearById,
 };
