@@ -7,6 +7,7 @@ import { globalErrorHandler } from './middleware/globalErrorHandler';
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { adminRoutes } from './modules/admin/admin.routes';
+import { providerRoutes } from './modules/provider/provider.routes';
 
 const app: Application = express();
 
@@ -28,6 +29,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/provider', providerRoutes);
 
 app.use(notFound);
 
