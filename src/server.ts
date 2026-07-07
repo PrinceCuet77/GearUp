@@ -2,6 +2,9 @@ import 'dotenv/config';
 import app from './app';
 import config from './config';
 import { prisma } from './lib/prisma';
+import net from 'net';
+
+net.setDefaultAutoSelectFamily(false);
 
 const PORT = config.port;
 
