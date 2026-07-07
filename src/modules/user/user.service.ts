@@ -16,6 +16,28 @@ const getUserDetailsFromDB = async (userId: string) => {
   return user;
 };
 
+const updateMyProfileInDB = async (
+  userId: string,
+  payload: { name?: string; avatarUrl?: string },
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: payload,
+    omit: { password: true },
+  });
+
+  return updatedUser;
+};
+
 export const userService = {
   getUserDetailsFromDB,
+  updateMyProfileInDB,
 };
