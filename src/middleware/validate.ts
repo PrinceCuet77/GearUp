@@ -20,9 +20,9 @@ export const validate = (
     if (source === 'body') {
       req.body = result.data;
     } else if (source === 'query') {
-      req.query = result.data as any;
+      Object.assign(req.query, result.data);
     } else if (source === 'params') {
-      req.params = result.data as any;
+      Object.assign(req.params, result.data);
     }
 
     next();

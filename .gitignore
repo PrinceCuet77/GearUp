@@ -143,3 +143,4 @@ vite.config.ts.timestamp-*
 .vite/
 
 package-lock.json
+.vercel
