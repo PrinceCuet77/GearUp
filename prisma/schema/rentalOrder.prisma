@@ -8,7 +8,7 @@ model RentalOrder {
   updatedAt DateTime     @updatedAt
 
   customerId String
-  customer   User   @relation(fields: [customerId], references: [id])
+  customer   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   items    RentalOrderItem[]
   payments Payment[]

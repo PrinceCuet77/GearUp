@@ -59,7 +59,7 @@ export const updateOrderStatusParamSchema = z.object({
 });
 
 export const updateOrderStatusBodySchema = z.object({
-  status: z.nativeEnum(RentalStatus, {
-    error: 'Invalid rental status',
+  status: z.enum(['CONFIRMED', 'PICKED_UP', 'RETURNED'], {
+    error: 'Invalid status. Allowed: CONFIRMED, PICKED_UP, RETURNED',
   }),
 });

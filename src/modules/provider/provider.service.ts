@@ -313,8 +313,7 @@ const getProviderOrders = async (
 
 // Valid status transitions for providers
 const PROVIDER_STATUS_TRANSITIONS: Record<string, string[]> = {
-  PLACED: ['CONFIRMED', 'CANCELLED'],
-  CONFIRMED: ['PAID', 'CANCELLED'],
+  PLACED: ['CONFIRMED'],
   PAID: ['PICKED_UP'],
   PICKED_UP: ['RETURNED'],
 };

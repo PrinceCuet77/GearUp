@@ -7,7 +7,7 @@ model RentalOrderItem {
   rentalOrder   RentalOrder @relation(fields: [rentalOrderId], references: [id], onDelete: Cascade)
 
   gearItemId String
-  gearItem   GearItem @relation(fields: [gearItemId], references: [id])
+  gearItem   GearItem @relation(fields: [gearItemId], references: [id], onDelete: Cascade)
 
   @@map("rental_order_items")
 }
