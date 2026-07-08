@@ -23,7 +23,7 @@ router.post(
 router.post(
   '/confirm',
   validate(confirmPaymentQuerySchema, 'query'),
-  validate(confirmPaymentBodySchema, 'body'),
+  // validate(confirmPaymentBodySchema, 'body'),
   paymentController.confirmPayment,
 );
 

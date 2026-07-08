@@ -33,7 +33,7 @@ const createPaymentInDB = async (
     );
   }
 
-  // Check order status — only CONFIRMED orders can be paid
+  // only CONFIRMED status order can be paid
   if (rentalOrder.status !== RentalStatus.CONFIRMED) {
     throw new BadRequestError(
       `Cannot pay for an order with status '${rentalOrder.status}'`,
@@ -62,9 +62,9 @@ const createPaymentInDB = async (
     total_amount: Number(rentalOrder.amount),
     currency: 'BDT',
     tran_id: transactionId,
-    success_url: `${config.app_url}/api/payments/success?orderId=${rentalOrder.id}&tranId=${transactionId}`,
-    fail_url: `${config.app_url}/api/payments/fail?orderId=${rentalOrder.id}&tranId=${transactionId}`,
-    cancel_url: `${config.app_url}/api/payments/cancel?orderId=${rentalOrder.id}&tranId=${transactionId}`,
+    success_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=success`,
+    fail_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=fail`,
+    cancel_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=cancel`,
     cus_name: customer.name ?? 'Customer',
     cus_email: customer.email,
     cus_add1: 'N/A',
@@ -111,7 +111,7 @@ const confirmPayment = async (
   orderId: string,
   tranId: string,
   status: string,
-  payload: IConfirmPaymentBody,
+  payload: Record<string, unknown>,
 ) => {
   // Find the payment record by transactionId
   const payment = await prisma.payment.findUnique({
@@ -140,13 +140,7 @@ const confirmPayment = async (
     return status;
   }
 
-  // Verify the payment with SSLCommerz validation API
-  const valId = payload.val_id;
-  if (!valId) {
-    throw new BadRequestError('Validation ID is missing from the payload');
-  }
-
-  const validationUrl = `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${valId}&store_id=${config.ssl_commerz_store_id}&store_passwd=${config.ssl_commerz_store_passwd}&format=json`;
+  const validationUrl = `https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php?val_id=${payload.val_id}&store_id=${config.ssl_commerz_store_id}&store_passwd=${config.ssl_commerz_store_passwd}&format=json`;
 
   const response = await axios.get(validationUrl);
   const validationData = response.data;
@@ -223,6 +217,10 @@ const getPaymentHistory = async (
           },
         },
       },
+      omit: {
+        gatewayResponse: true,
+        rentalOrderId: true,
+      },
       orderBy: {
         [sortBy as string]: sortOrder,
       },
@@ -272,6 +270,10 @@ const getPaymentById = async (paymentId: string, customerId: string) => {
           },
         },
       },
+    },
+    omit: {
+      gatewayResponse: true,
+      rentalOrderId: true,
     },
   });
 

@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const createReviewSchema = z.object({
   rentalOrderId: z.string().min(1, 'Rental order ID is required'),
-  gearItemId: z.string().min(1, 'Gear item ID is required'),
   rating: z
     .number()
     .int('Rating must be an integer')

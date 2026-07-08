@@ -75,18 +75,6 @@ const getCategoryById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deleteCategory = catchAsync(async (req: Request, res: Response) => {
-  const categoryId = req.params.categoryId as string;
-  await adminService.deleteCategory(categoryId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: 'Category deleted successfully',
-    data: null,
-  });
-});
-
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
@@ -94,5 +82,4 @@ export const adminController = {
   createCategory,
   updateCategory,
   getCategoryById,
-  deleteCategory,
 };

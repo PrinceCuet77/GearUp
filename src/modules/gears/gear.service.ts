@@ -55,6 +55,19 @@ const getAllGears = async (query: IGetAllGearsQuery) => {
             email: true,
           },
         },
+        rentalOrderItems: {
+          omit: {
+            rentalOrderId: true,
+            gearItemId: true,
+          },
+        },
+        reviews: {
+          omit: {
+            customerId: true,
+            gearItemId: true,
+            rentalOrderId: true,
+          },
+        },
       },
       orderBy: {
         [sortBy as string]: sortOrder,

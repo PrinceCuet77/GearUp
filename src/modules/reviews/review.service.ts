@@ -10,14 +10,16 @@ const createReview = async (
   customerId: string,
   payload: ICreateReviewPayload,
 ) => {
-  const { rentalOrderId, gearItemId, rating, comment } = payload;
+  const { rentalOrderId, rating, comment } = payload;
 
   // Verify the rental order exists and belongs to this customer
   const rentalOrder = await prisma.rentalOrder.findUnique({
     where: { id: rentalOrderId },
     include: {
       items: {
-        where: { gearItemId },
+        select: {
+          gearItemId: true,
+        },
       },
     },
   });
@@ -39,12 +41,12 @@ const createReview = async (
     );
   }
 
-  // Verify the gear item is part of this rental order
-  if (rentalOrder.items.length === 0) {
-    throw new BadRequestError(
-      'The specified gear item is not part of this rental order',
-    );
+  const firstItem = rentalOrder.items[0];
+  if (!firstItem) {
+    throw new BadRequestError('This rental order has no gear items to review');
   }
+
+  const gearItemId = firstItem.gearItemId;
 
   // Check if the customer already reviewed this gear item for this order
   const existingReview = await prisma.review.findFirst({
@@ -69,6 +71,11 @@ const createReview = async (
       gearItemId,
       rating,
       comment,
+    },
+    omit: {
+      customerId: true,
+      gearItemId: true,
+      rentalOrderId: true,
     },
     include: {
       customer: {

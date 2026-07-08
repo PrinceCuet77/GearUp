@@ -3,6 +3,9 @@ import { PrismaClient } from '../generated/prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
+import net from 'net';
+
+net.setDefaultAutoSelectFamily(false);
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 

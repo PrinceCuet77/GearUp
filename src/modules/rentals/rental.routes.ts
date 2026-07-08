@@ -34,7 +34,7 @@ router.get(
 router.patch(
   '/:rentId/cancel',
   auth(UserRole.CUSTOMER),
-  validate(cancelRentalParamsSchema),
+  validate(cancelRentalParamsSchema, 'params'),
   rentalController.cancelRental,
 );
 
