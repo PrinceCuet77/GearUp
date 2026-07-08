@@ -12,6 +12,7 @@ import { gearRoutes } from './modules/gears/gear.routes';
 import { categoryRoutes } from './modules/categories/category.routes';
 import { rentalRoutes } from './modules/rentals/rental.routes';
 import { paymentRoutes } from './modules/payments/payment.routes';
+import { reviewRoutes } from './modules/reviews/review.route';
 
 const app: Application = express();
 
@@ -38,6 +39,7 @@ app.use('/api/gears', gearRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/rentals', rentalRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.use(notFound);
 
