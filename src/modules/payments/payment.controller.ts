@@ -31,12 +31,15 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
     payload,
   );
 
+  const base_url =
+    config.app_url === 'development' ? config.app_url : config.prod_url;
+
   if (response === 'success') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=success`);
+    res.redirect(`${base_url}/dashboard/payments?status=success`);
   } else if (response === 'fail') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=failed`);
+    res.redirect(`${base_url}/dashboard/payments?status=failed`);
   } else if (response === 'cancel') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=cancelled`);
+    res.redirect(`${base_url}/dashboard/payments?status=cancelled`);
   }
 });
 
