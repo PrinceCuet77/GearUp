@@ -7,6 +7,7 @@ import {
   updateUserStatusSchema,
   createCategorySchema,
   updateCategorySchema,
+  getAllGearsQuerySchema,
 } from './admin.validation';
 
 const router = Router();
@@ -44,6 +45,13 @@ router.get(
   '/categories/:categoryId',
   auth(UserRole.ADMIN),
   adminController.getCategoryById,
+);
+
+router.get(
+  '/gears',
+  auth(UserRole.ADMIN),
+  validate(getAllGearsQuerySchema, 'query'),
+  adminController.getAllGears,
 );
 
 export const adminRoutes = router;

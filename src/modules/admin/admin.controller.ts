@@ -75,6 +75,28 @@ const getCategoryById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllGears = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query as {
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  };
+  const result = await adminService.getAllGears(query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'All gear items retrieved successfully',
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
@@ -82,4 +104,5 @@ export const adminController = {
   createCategory,
   updateCategory,
   getCategoryById,
+  getAllGears,
 };
