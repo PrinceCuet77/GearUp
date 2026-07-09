@@ -53,6 +53,6 @@ export const globalErrorHandler = (
     success: false,
     statusCode: statusCode || httpStatus.INTERNAL_SERVER_ERROR,
     message: errorMessage,
-    errorDetails: config.node_env === 'development' ? errorDetails : undefined,
+    errorDetails: errorDetails,
   });
 };

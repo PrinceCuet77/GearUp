@@ -28,7 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Gear up application');
+  res.send('Gear up application is running');
 });
 
 app.use('/api/auth', authRoutes);

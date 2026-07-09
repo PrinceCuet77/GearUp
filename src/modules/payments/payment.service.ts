@@ -55,6 +55,8 @@ const createPaymentInDB = async (
   const transactionId = `TRNX_ID_${Date.now()}`;
 
   const customer = rentalOrder.customer;
+  const base_url =
+    config.app_url === 'development' ? config.app_url : config.prod_url;
 
   const sslPayload = {
     store_id: config.ssl_commerz_store_id,
@@ -62,9 +64,9 @@ const createPaymentInDB = async (
     total_amount: Number(rentalOrder.amount),
     currency: 'BDT',
     tran_id: transactionId,
-    success_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=success`,
-    fail_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=fail`,
-    cancel_url: `${config.app_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=cancel`,
+    success_url: `${base_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=success`,
+    fail_url: `${base_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=fail`,
+    cancel_url: `${base_url}/api/payments/confirm?orderId=${rentalOrder.id}&tranId=${transactionId}&status=cancel`,
     cus_name: customer.name ?? 'Customer',
     cus_email: customer.email,
     cus_add1: 'N/A',
