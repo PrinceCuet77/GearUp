@@ -20,6 +20,14 @@ export const updateGearSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+export const deleteGearParamSchema = z.object({
+  gearId: z.string().min(1, 'Gear ID is required'),
+});
+
+export const getGearByIdParamSchema = z.object({
+  gearId: z.string().min(1, 'Gear ID is required'),
+});
+
 export const getProviderOrdersQuerySchema = z.object({
   status: z
     .nativeEnum(RentalStatus, {

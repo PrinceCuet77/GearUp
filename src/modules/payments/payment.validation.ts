@@ -25,9 +25,3 @@ export const confirmPaymentQuerySchema = z.object({
   tranId: z.string().min(1, 'Transaction ID is required'),
   status: z.enum(['success', 'fail', 'cancel']),
 });
-
-export const confirmPaymentBodySchema = z.object({
-  val_id: z.string().min(1, 'Validation ID is required'),
-  amount: z.number().positive('Amount must be positive'),
-  currency: z.string().min(1, 'Currency is required'),
-});

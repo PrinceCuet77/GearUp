@@ -46,6 +46,28 @@ const createGear = async (providerId: string, payload: ICreateGearPayload) => {
   return gear;
 };
 
+const getGearById = async (providerId: string, gearId: string) => {
+  const gear = await prisma.gearItem.findUnique({
+    where: { id: gearId, providerId: providerId },
+    include: {
+      category: true,
+      provider: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!gear) {
+    throw new NotFoundError('Gear item not found or access denied');
+  }
+
+  return gear;
+};
+
 const getUserSpecificProviderGear = async (
   userId: string,
   query: IGetProviderGearQuery,
@@ -163,6 +185,44 @@ const updateGear = async (
   return updated;
 };
 
+const deleteGear = async (providerId: string, gearId: string) => {
+  const gear = await prisma.gearItem.findUnique({
+    where: { id: gearId },
+  });
+
+  if (!gear) {
+    throw new NotFoundError('Gear item not found');
+  }
+
+  if (gear.providerId !== providerId) {
+    throw new ForbiddenError('You are not authorized to delete this gear item');
+  }
+
+  const activeRental = await prisma.rentalOrderItem.findFirst({
+    where: {
+      gearItemId: gearId,
+      rentalOrder: {
+        status: {
+          in: [
+            RentalStatus.PLACED,
+            RentalStatus.CONFIRMED,
+            RentalStatus.PAID,
+            RentalStatus.PICKED_UP,
+          ],
+        },
+      },
+    },
+  });
+
+  if (activeRental) {
+    throw new ConflictError(
+      'Cannot delete gear item with active rental orders',
+    );
+  }
+
+  await prisma.gearItem.delete({ where: { id: gearId } });
+};
+
 const getProviderOrderById = async (
   providerId: string,
   orderId: string,
@@ -191,7 +251,6 @@ const getProviderOrderById = async (
           id: true,
           name: true,
           email: true,
-          phone: true,
         },
       },
       items: {
@@ -214,7 +273,6 @@ const getProviderOrderById = async (
           id: true,
           amount: true,
           status: true,
-          method: true,
           paidAt: true,
         },
       },
@@ -259,7 +317,6 @@ const getProviderOrders = async (
             id: true,
             name: true,
             email: true,
-            phone: true,
           },
         },
         items: {
@@ -284,7 +341,6 @@ const getProviderOrders = async (
             id: true,
             amount: true,
             status: true,
-            method: true,
             paidAt: true,
           },
         },
@@ -401,9 +457,11 @@ const updateOrderStatus = async (
 };
 
 export const providerService = {
+  getGearById,
   createGear,
   getUserSpecificProviderGear,
   updateGear,
+  deleteGear,
   getProviderOrders,
   getProviderOrderById,
   updateOrderStatus,

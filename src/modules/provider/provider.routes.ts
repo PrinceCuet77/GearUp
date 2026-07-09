@@ -6,32 +6,48 @@ import { validate } from '../../middleware/validate';
 import {
   createGearSchema,
   updateGearSchema,
+  deleteGearParamSchema,
   getProviderOrdersQuerySchema,
   getProviderOrderByIdParamSchema,
   updateOrderStatusParamSchema,
   updateOrderStatusBodySchema,
+  getGearByIdParamSchema,
 } from './provider.validation';
 
 const router = Router();
 
 router.get(
   '/gears',
-  auth(UserRole.PROVIDER, UserRole.ADMIN),
+  auth(UserRole.PROVIDER),
   providerController.getUserSpecificProviderGear,
 );
 
 router.post(
-  '/gear',
+  '/gears',
   auth(UserRole.PROVIDER),
   validate(createGearSchema),
   providerController.createGear,
 );
 
+router.get(
+  '/gears/:gearId',
+  auth(UserRole.PROVIDER),
+  validate(getGearByIdParamSchema, 'params'),
+  providerController.getGearById,
+);
+
 router.patch(
-  '/gear/:gearId',
+  '/gears/:gearId',
   auth(UserRole.PROVIDER),
   validate(updateGearSchema),
   providerController.updateGear,
+);
+
+router.delete(
+  '/gears/:gearId',
+  auth(UserRole.PROVIDER),
+  validate(deleteGearParamSchema, 'params'),
+  providerController.deleteGear,
 );
 
 router.get(

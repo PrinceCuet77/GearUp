@@ -5,7 +5,6 @@ import { validate } from '../../middleware/validate';
 import {
   createPaymentSchema,
   confirmPaymentQuerySchema,
-  confirmPaymentBodySchema,
   getPaymentHistoryQuerySchema,
   getPaymentByIdParamsSchema,
 } from './payment.validation';
@@ -23,7 +22,6 @@ router.post(
 router.post(
   '/confirm',
   validate(confirmPaymentQuerySchema, 'query'),
-  // validate(confirmPaymentBodySchema, 'body'),
   paymentController.confirmPayment,
 );
 

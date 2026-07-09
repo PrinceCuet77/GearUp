@@ -51,6 +51,32 @@ const updateGear = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getGearById = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const gearId = req.params.gearId as string;
+  const gear = await providerService.getGearById(providerId, gearId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Gear item retrieved successfully',
+    data: gear,
+  });
+});
+
+const deleteGear = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const gearId = req.params.gearId as string;
+  await providerService.deleteGear(providerId, gearId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Gear item deleted successfully',
+    data: null,
+  });
+});
+
 const getProviderOrderById = catchAsync(async (req: Request, res: Response) => {
   const providerId = req.user?.userId as string;
   const role = req.user?.role as string;
@@ -106,9 +132,11 @@ const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const providerController = {
+  getGearById,
   createGear,
   getUserSpecificProviderGear,
   updateGear,
+  deleteGear,
   getProviderOrders,
   getProviderOrderById,
   updateOrderStatus,
