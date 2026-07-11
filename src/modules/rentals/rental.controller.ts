@@ -3,7 +3,7 @@ import httpStatus from 'http-status';
 import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
 import { rentalService } from './rental.service';
-import { IGetCustomerRentalsQuery } from './rental.interface';
+import { IGetCustomerRentalsQuery, RentalQueryRole } from './rental.interface';
 
 const createRental = catchAsync(async (req: Request, res: Response) => {
   const customerId = req.user?.userId as string;
@@ -22,6 +22,7 @@ const getCustomerRentals = catchAsync(async (req: Request, res: Response) => {
   const result = await rentalService.getCustomerRentals(
     customerId,
     req.query as IGetCustomerRentalsQuery,
+    req.user?.role as RentalQueryRole,
   );
 
   sendResponse(res, {
@@ -36,7 +37,11 @@ const getCustomerRentals = catchAsync(async (req: Request, res: Response) => {
 const getRentalById = catchAsync(async (req: Request, res: Response) => {
   const customerId = req.user?.userId as string;
   const rentalId = req.params.rentalId as string;
-  const rental = await rentalService.getRentalById(rentalId, customerId);
+  const rental = await rentalService.getRentalById(
+    rentalId,
+    customerId,
+    req.user?.role as RentalQueryRole,
+  );
 
   sendResponse(res, {
     success: true,

@@ -98,9 +98,11 @@ const getProviderOrderById = catchAsync(async (req: Request, res: Response) => {
 
 const getProviderOrders = catchAsync(async (req: Request, res: Response) => {
   const providerId = req.user?.userId as string;
+  const role = req.user?.role as string;
   const result = await providerService.getProviderOrders(
     providerId,
     req.query as IGetProviderOrdersQuery,
+    role,
   );
 
   sendResponse(res, {

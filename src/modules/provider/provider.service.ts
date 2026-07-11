@@ -289,18 +289,21 @@ const getProviderOrderById = async (
 const getProviderOrders = async (
   providerId: string,
   query: IGetProviderOrdersQuery,
+  role?: string,
 ) => {
   const { status, page = 1, limit = 10 } = query;
 
-  const where: Prisma.RentalOrderWhereInput = {
-    items: {
+  const where: Prisma.RentalOrderWhereInput = {};
+
+  if (role !== 'ADMIN') {
+    where.items = {
       some: {
         gearItem: {
           providerId,
         },
       },
-    },
-  };
+    };
+  }
 
   if (status) {
     where.status = status as RentalStatus;
@@ -320,11 +323,7 @@ const getProviderOrders = async (
           },
         },
         items: {
-          where: {
-            gearItem: {
-              providerId,
-            },
-          },
+          where: role !== 'ADMIN' ? { gearItem: { providerId } } : undefined,
           include: {
             gearItem: {
               select: {

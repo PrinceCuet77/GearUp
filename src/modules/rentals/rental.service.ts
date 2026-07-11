@@ -8,6 +8,7 @@ import {
 import {
   ICreateRentalPayload,
   IGetCustomerRentalsQuery,
+  RentalQueryRole,
 } from './rental.interface';
 
 const createRental = async (
@@ -127,6 +128,7 @@ const createRental = async (
 const getCustomerRentals = async (
   customerId: string,
   query: IGetCustomerRentalsQuery,
+  role?: RentalQueryRole,
 ) => {
   const {
     status,
@@ -136,9 +138,8 @@ const getCustomerRentals = async (
     sortOrder = 'desc',
   } = query;
 
-  const where: Prisma.RentalOrderWhereInput = {
-    customerId,
-  };
+  const where: Prisma.RentalOrderWhereInput =
+    role === 'ADMIN' ? {} : { customerId };
 
   if (status) {
     where.status = status as RentalStatus;
@@ -257,7 +258,11 @@ const cancelRental = async (rentalId: string, customerId: string) => {
   return cancelledOrder;
 };
 
-const getRentalById = async (rentalId: string, customerId: string) => {
+const getRentalById = async (
+  rentalId: string,
+  customerId: string,
+  role?: RentalQueryRole,
+) => {
   const rental = await prisma.rentalOrder.findUnique({
     where: { id: rentalId },
     include: {
@@ -298,7 +303,7 @@ const getRentalById = async (rentalId: string, customerId: string) => {
     throw new NotFoundError('Rental order not found');
   }
 
-  if (rental.customerId !== customerId) {
+  if (role !== 'ADMIN' && rental.customerId !== customerId) {
     throw new ForbiddenError(
       'You are not authorized to view this rental order',
     );

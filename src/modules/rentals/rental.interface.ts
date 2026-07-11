@@ -16,3 +16,5 @@ export interface IGetCustomerRentalsQuery {
   sortBy?: 'createdAt' | 'startDate' | 'endDate' | 'amount';
   sortOrder?: 'asc' | 'desc';
 }
+
+export type RentalQueryRole = 'CUSTOMER' | 'ADMIN';

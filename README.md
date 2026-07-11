@@ -8,7 +8,14 @@ GearUp is a backend API for a sports and outdoor equipment rental service. Custo
 
 [Live URL](https://gear-up-self.vercel.app/)
 
----
+[Live Postman Colleaction URL](https://documenter.getpostman.com/view/17094363/2sBY4Jximt)
+
+- Admin Credentials
+
+```
+Admin Email      : admin@gearup.com
+Admin Password   : Password123!
+```
 
 ## Features
 
@@ -50,8 +57,6 @@ GearUp is a backend API for a sports and outdoor equipment rental service. Custo
 - Cookie-based authentication support
 - Pagination support on all list endpoints
 
----
-
 ## Tech Stack
 
 | Category       | Technology                       |
@@ -66,8 +71,6 @@ GearUp is a backend API for a sports and outdoor equipment rental service. Custo
 | Validation     | Zod v4                           |
 | Build Tool     | tsup                             |
 | Deployment     | Vercel                           |
-
----
 
 ## Database Schema
 
@@ -172,8 +175,6 @@ RentalStatus:  PLACED | CONFIRMED | PAID | PICKED_UP | RETURNED | CANCELLED
 PaymentStatus: PENDING | COMPLETED | FAILED
 ```
 
----
-
 ## Entity Relationship Diagram
 
 ```mermaid
@@ -253,8 +254,6 @@ erDiagram
     }
 ```
 
----
-
 ## Project Structure
 
 ```
@@ -306,8 +305,6 @@ GearUp/
 ├── tsup.config.ts
 └── vercel.json
 ```
-
----
 
 ## Setup Steps
 
@@ -376,8 +373,6 @@ npm start
 ### 7. Deploy to Vercel
 
 Ensure `dist/server.js` is built, then push to a Vercel-connected repository. The `vercel.json` routes all traffic to `dist/server.js`.
-
----
 
 ## API Endpoint Reference
 
@@ -466,8 +461,6 @@ Base URL: `https://gear-up-self.vercel.app/api`
 | PATCH  | `/:reviewId` | `{ rating?, comment? }`              | CUSTOMER | Update review    |
 | DELETE | `/:reviewId` | –                                    | CUSTOMER | Delete review    |
 
----
-
 ## Error Response Format
 
 ### Success Response
@@ -510,8 +503,6 @@ Base URL: `https://gear-up-self.vercel.app/api`
 | 404  | Not Found             | Resource not found              |
 | 409  | Conflict              | Duplicate resource              |
 | 500  | Internal Server Error | Unhandled server error          |
-
----
 
 ## Author
 
