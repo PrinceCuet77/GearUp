@@ -367,10 +367,11 @@ const getProviderOrders = async (
 };
 
 // Valid status transitions for providers
+// Provider flow: PLACED → CONFIRMED (confirm order) → PAID (payment) → PICKED_UP (mark picked up)
+// RETURNED is handled by the customer, not the provider
 const PROVIDER_STATUS_TRANSITIONS: Record<string, string[]> = {
   PLACED: ['CONFIRMED'],
   PAID: ['PICKED_UP'],
-  PICKED_UP: ['RETURNED'],
 };
 
 const updateOrderStatus = async (
@@ -456,44 +457,60 @@ const updateOrderStatus = async (
 };
 
 const getProviderDashboard = async (providerId: string) => {
-  const [totalGearListed, providerOrders, pendingOrders, recentOrdersRaw] =
-    await Promise.all([
-      prisma.gearItem.count({ where: { providerId } }),
+  const [
+    totalGearListed,
+    providerOrders,
+    needsConfirmation,
+    readyForPickup,
+    recentOrdersRaw,
+  ] = await Promise.all([
+    prisma.gearItem.count({ where: { providerId } }),
 
-      prisma.rentalOrder.findMany({
-        where: {
-          items: { some: { gearItem: { providerId } } },
-        },
-        select: { id: true },
-      }),
+    prisma.rentalOrder.findMany({
+      where: {
+        items: { some: { gearItem: { providerId } } },
+      },
+      select: { id: true },
+    }),
 
-      prisma.rentalOrder.findMany({
-        where: {
-          items: { some: { gearItem: { providerId } } },
-          status: RentalStatus.PLACED,
-        },
-        select: { id: true },
-      }),
+    // Orders waiting for provider to confirm
+    prisma.rentalOrder.findMany({
+      where: {
+        items: { some: { gearItem: { providerId } } },
+        status: RentalStatus.PLACED,
+      },
+      select: { id: true },
+    }),
 
-      prisma.rentalOrder.findMany({
-        where: {
-          items: { some: { gearItem: { providerId } } },
+    // Orders paid & ready for provider to mark as picked up
+    prisma.rentalOrder.findMany({
+      where: {
+        items: { some: { gearItem: { providerId } } },
+        status: RentalStatus.PAID,
+      },
+      select: { id: true },
+    }),
+
+    prisma.rentalOrder.findMany({
+      where: {
+        items: { some: { gearItem: { providerId } } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        customer: {
+          select: { id: true, name: true, email: true },
         },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-        include: {
-          customer: {
-            select: { id: true, name: true, email: true },
-          },
-        },
-      }),
-    ]);
+      },
+    }),
+  ]);
 
   return {
     stats: {
       totalGearListed,
       totalOrders: providerOrders.length,
-      pendingOrders: pendingOrders.length,
+      needsConfirmation: needsConfirmation.length,
+      readyForPickup: readyForPickup.length,
     },
     recentOrders: recentOrdersRaw.map((order) => ({
       id: order.id,

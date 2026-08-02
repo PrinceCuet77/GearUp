@@ -3,14 +3,70 @@ import { prisma } from '../../lib/prisma';
 import { ApiError, ConflictError, NotFoundError } from '../../errors/ApiError';
 import { UserStatus } from '../../../generated/prisma/enums';
 
-const getAllUsers = async () => {
-  const users = await prisma.user.findMany({
-    omit: {
-      password: true,
-    },
-  });
+const getAllUsers = async (query: {
+  search?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+}) => {
+  const {
+    search,
+    role,
+    status,
+    page = 1,
+    limit = 10,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = query;
 
-  return users;
+  const where: Prisma.UserWhereInput = {};
+
+  if (search) {
+    where.OR = [
+      { name: { contains: String(search), mode: 'insensitive' } },
+      { email: { contains: String(search), mode: 'insensitive' } },
+    ];
+  }
+
+  if (role) {
+    where.role = role as any;
+  }
+
+  if (status) {
+    where.status = status as any;
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      omit: {
+        password: true,
+      },
+      orderBy: {
+        [sortBy as string]: sortOrder,
+      },
+      skip,
+      take: Number(limit),
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / Number(limit));
+
+  return {
+    data,
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages,
+    },
+  };
 };
 
 const getUserDetailsById = async (userId: string) => {
@@ -142,9 +198,7 @@ const getAllGears = async (query: {
   const where: Prisma.GearItemWhereInput = {};
 
   if (category) {
-    where.category = {
-      name: { contains: String(category), mode: 'insensitive' },
-    };
+    where.categoryId = String(category);
   }
 
   if (minPrice !== undefined || maxPrice !== undefined) {

@@ -11,6 +11,12 @@ import {
   RentalQueryRole,
 } from './rental.interface';
 
+// Valid status transitions for customers
+const CUSTOMER_STATUS_TRANSITIONS: Record<string, string[]> = {
+  PLACED: ['CANCELLED'],
+  PICKED_UP: ['RETURNED'],
+};
+
 const createRental = async (
   customerId: string,
   payload: ICreateRentalPayload,
@@ -212,7 +218,9 @@ const cancelRental = async (rentalId: string, customerId: string) => {
     );
   }
 
-  if (rental.status !== 'PLACED') {
+  // Validate status transition
+  const allowedTransitions = CUSTOMER_STATUS_TRANSITIONS[rental.status];
+  if (!allowedTransitions || !allowedTransitions.includes('CANCELLED')) {
     throw new BadRequestError(
       `Cannot cancel rental order with status "${rental.status}". Only orders with status "PLACED" can be cancelled.`,
     );
@@ -259,7 +267,6 @@ const cancelRental = async (rentalId: string, customerId: string) => {
           },
         },
         payments: true,
-        reviews: true,
         customer: {
           select: {
             id: true,
@@ -306,7 +313,6 @@ const getRentalById = async (
         },
       },
       payments: true,
-      reviews: true,
       customer: {
         select: {
           id: true,
@@ -327,7 +333,129 @@ const getRentalById = async (
     );
   }
 
-  return rental;
+  // Fetch all reviews for this rental order and deduplicate (one per rental order)
+  const allReviews = await prisma.review.findMany({
+    where: { rentalOrderId: rentalId },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+      gearItem: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  // Deduplicate by customerId — each customer leaves one review per rental order
+  const seen = new Set<string>();
+  const reviews = allReviews.filter((r) => {
+    if (seen.has(r.customerId)) return false;
+    seen.add(r.customerId);
+    return true;
+  });
+
+  return { ...rental, reviews };
+};
+
+const markAsReturned = async (rentalId: string, customerId: string) => {
+  const rental = await prisma.rentalOrder.findUnique({
+    where: { id: rentalId },
+    include: {
+      items: {
+        include: {
+          gearItem: {
+            select: {
+              id: true,
+              providerId: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!rental) {
+    throw new NotFoundError('Rental order not found');
+  }
+
+  if (rental.customerId !== customerId) {
+    throw new ForbiddenError(
+      'You are not authorized to mark this rental order as returned',
+    );
+  }
+
+  // Validate status transition
+  const allowedTransitions = CUSTOMER_STATUS_TRANSITIONS[rental.status];
+  if (!allowedTransitions || !allowedTransitions.includes('RETURNED')) {
+    throw new BadRequestError(
+      `Cannot mark order with status "${rental.status}" as returned. Only orders with status "PICKED_UP" can be returned.`,
+    );
+  }
+
+  // Restore stock and mark as returned in a transaction
+  const returnedOrder = await prisma.$transaction(async (tx) => {
+    // Restore stock for each gear item
+    for (const item of rental.items) {
+      await tx.gearItem.update({
+        where: { id: item.gearItemId },
+        data: {
+          stock: {
+            increment: item.quantity,
+          },
+        },
+      });
+    }
+
+    // Update order status to RETURNED
+    const updated = await tx.rentalOrder.update({
+      where: { id: rentalId },
+      data: { status: 'RETURNED' },
+      include: {
+        items: {
+          include: {
+            gearItem: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                price: true,
+                images: true,
+                category: true,
+                provider: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        payments: true,
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return updated;
+  });
+
+  return returnedOrder;
 };
 
 export const rentalService = {
@@ -335,4 +463,5 @@ export const rentalService = {
   getCustomerRentals,
   getRentalById,
   cancelRental,
+  markAsReturned,
 };

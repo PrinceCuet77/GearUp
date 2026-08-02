@@ -64,9 +64,23 @@ const cancelRental = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const markAsReturned = catchAsync(async (req: Request, res: Response) => {
+  const customerId = req.user?.userId as string;
+  const rentalId = req.params.rentalId as string;
+  const rental = await rentalService.markAsReturned(rentalId, customerId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Rental order marked as returned successfully',
+    data: rental,
+  });
+});
+
 export const rentalController = {
   createRental,
   getCustomerRentals,
   getRentalById,
   cancelRental,
+  markAsReturned,
 };

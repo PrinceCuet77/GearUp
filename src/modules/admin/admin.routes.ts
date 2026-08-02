@@ -8,11 +8,17 @@ import {
   createCategorySchema,
   updateCategorySchema,
   getAllGearsQuerySchema,
+  getAllUsersQuerySchema,
 } from './admin.validation';
 
 const router = Router();
 
-router.get('/users', auth(UserRole.ADMIN), adminController.getAllUserDetails);
+router.get(
+  '/users',
+  auth(UserRole.ADMIN),
+  validate(getAllUsersQuerySchema, 'query'),
+  adminController.getAllUserDetails,
+);
 
 router.get(
   '/user/:userId',

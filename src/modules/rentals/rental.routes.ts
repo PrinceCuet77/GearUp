@@ -7,6 +7,7 @@ import {
   createRentalSchema,
   cancelRentalParamsSchema,
   getCustomerRentalsQuerySchema,
+  markAsReturnedParamsSchema,
 } from './rental.validation';
 
 const router = Router();
@@ -36,6 +37,13 @@ router.patch(
   auth(UserRole.CUSTOMER),
   validate(cancelRentalParamsSchema, 'params'),
   rentalController.cancelRental,
+);
+
+router.patch(
+  '/:rentalId/return',
+  auth(UserRole.CUSTOMER),
+  validate(markAsReturnedParamsSchema, 'params'),
+  rentalController.markAsReturned,
 );
 
 export const rentalRoutes = router;

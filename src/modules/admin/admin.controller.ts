@@ -4,13 +4,23 @@ import { sendResponse } from '../../utils/sendResponse';
 import { adminService } from './admin.service';
 
 const getAllUserDetails = catchAsync(async (req: Request, res: Response) => {
-  const users = await adminService.getAllUsers();
+  const query = req.query as {
+    search?: string;
+    role?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  };
+  const result = await adminService.getAllUsers(query);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: 'Users retrieved successfully',
-    data: users,
+    data: result.data,
+    meta: result.meta,
   });
 });
 

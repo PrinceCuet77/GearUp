@@ -24,7 +24,7 @@ const createReview = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.CREATED,
-    message: 'Review created successfully',
+    message: 'Review created successfully for all gear items',
     data: review,
   });
 });

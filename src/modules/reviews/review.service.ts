@@ -57,19 +57,22 @@ const createReview = async (
     throw new BadRequestError('You have already reviewed this rental order');
   }
 
-  // Create a single review for the rental order (items[0] is guaranteed by length check above)
-  const createdReview = await prisma.review.create({
-    data: {
+  // Create a review for EVERY gear item in the rental order (same rating & comment)
+  const reviewData = rentalOrder.items.map((item) => ({
+    customerId,
+    rentalOrderId,
+    gearItemId: item.gearItemId,
+    rating,
+    comment,
+  }));
+
+  await prisma.review.createMany({ data: reviewData });
+
+  // Return one representative review with full relations
+  const createdReview = await prisma.review.findFirst({
+    where: {
       customerId,
       rentalOrderId,
-      gearItemId: rentalOrder.items[0]!.gearItemId,
-      rating,
-      comment,
-    },
-    omit: {
-      customerId: true,
-      gearItemId: true,
-      rentalOrderId: true,
     },
     include: {
       customer: {
@@ -163,7 +166,7 @@ const updateReview = async (
     data: payload,
   });
 
-  // Return the first review with full relations
+  // Return one representative updated review with full relations
   const updatedReview = await prisma.review.findFirst({
     where: {
       rentalOrderId: existingReview.rentalOrderId,

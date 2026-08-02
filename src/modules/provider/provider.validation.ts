@@ -2,21 +2,42 @@ import { z } from 'zod';
 import { RentalStatus } from '../../../generated/prisma/enums';
 
 export const createGearSchema = z.object({
-  name: z.string().min(1, 'Gear name is required'),
-  description: z.string().min(1, 'Description is required'),
+  name: z
+    .string()
+    .min(1, 'Gear name is required')
+    .max(100, 'Gear name must be at most 100 characters'),
+  description: z
+    .string()
+    .min(1, 'Description is required')
+    .max(255, 'Description must be at most 255 characters'),
   price: z.number().positive('Price must be a positive number'),
-  stock: z.number().int().min(0, 'Stock cannot be negative').optional(),
-  images: z.string().min(1, 'Images URL is required'),
+  stock: z.number().int().min(0, 'Stock cannot be negative'),
+  images: z
+    .string()
+    .min(1, 'Images URL is required')
+    .max(255, 'Images URL must be at most 255 characters'),
   categoryId: z.string().min(1, 'Category ID is required'),
 });
 
 export const updateGearSchema = z.object({
-  name: z.string().min(1, 'Gear name is required').optional(),
-  description: z.string().min(1, 'Description is required').optional(),
+  name: z
+    .string()
+    .min(1, 'Gear name is required')
+    .max(100, 'Gear name must be at most 100 characters')
+    .optional(),
+  description: z
+    .string()
+    .min(1, 'Description is required')
+    .max(255, 'Description must be at most 255 characters')
+    .optional(),
   price: z.number().positive('Price must be a positive number').optional(),
   stock: z.number().int().min(0, 'Stock cannot be negative').optional(),
-  images: z.string().min(1, 'Images URL is required').optional(),
-  categoryId: z.string().min(1, 'Category ID is required').optional(),
+  images: z
+    .string()
+    .min(1, 'Images URL is required')
+    .max(255, 'Images URL must be at most 255 characters')
+    .optional(),
+  categoryId: z.string().min(1, 'Category ID is required'),
   isActive: z.boolean().optional(),
 });
 
@@ -67,7 +88,7 @@ export const updateOrderStatusParamSchema = z.object({
 });
 
 export const updateOrderStatusBodySchema = z.object({
-  status: z.enum(['CONFIRMED', 'PICKED_UP', 'RETURNED'], {
-    error: 'Invalid status. Allowed: CONFIRMED, PICKED_UP, RETURNED',
+  status: z.enum(['CONFIRMED', 'PICKED_UP'], {
+    error: 'Invalid status. Allowed: CONFIRMED, PICKED_UP',
   }),
 });
