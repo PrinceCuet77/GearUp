@@ -455,6 +455,60 @@ const updateOrderStatus = async (
   return updatedOrder;
 };
 
+const getProviderDashboard = async (providerId: string) => {
+  const [totalGearListed, providerOrders, pendingOrders, recentOrdersRaw] =
+    await Promise.all([
+      prisma.gearItem.count({ where: { providerId } }),
+
+      prisma.rentalOrder.findMany({
+        where: {
+          items: { some: { gearItem: { providerId } } },
+        },
+        select: { id: true },
+      }),
+
+      prisma.rentalOrder.findMany({
+        where: {
+          items: { some: { gearItem: { providerId } } },
+          status: RentalStatus.PLACED,
+        },
+        select: { id: true },
+      }),
+
+      prisma.rentalOrder.findMany({
+        where: {
+          items: { some: { gearItem: { providerId } } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          customer: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      }),
+    ]);
+
+  return {
+    stats: {
+      totalGearListed,
+      totalOrders: providerOrders.length,
+      pendingOrders: pendingOrders.length,
+    },
+    recentOrders: recentOrdersRaw.map((order) => ({
+      id: order.id,
+      status: order.status,
+      startDate: order.startDate,
+      endDate: order.endDate,
+      amount: order.amount.toString(),
+      customerId: order.customerId,
+      customer: order.customer,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    })),
+  };
+};
+
 export const providerService = {
   getGearById,
   createGear,
@@ -464,4 +518,5 @@ export const providerService = {
   getProviderOrders,
   getProviderOrderById,
   updateOrderStatus,
+  getProviderDashboard,
 };

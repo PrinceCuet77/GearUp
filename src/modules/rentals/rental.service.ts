@@ -243,10 +243,28 @@ const cancelRental = async (rentalId: string, customerId: string) => {
               select: {
                 id: true,
                 name: true,
+                description: true,
                 price: true,
                 images: true,
+                category: true,
+                provider: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
               },
             },
+          },
+        },
+        payments: true,
+        reviews: true,
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
       },

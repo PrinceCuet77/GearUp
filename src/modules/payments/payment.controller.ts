@@ -32,11 +32,17 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
   );
 
   if (response === 'success') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=success`);
+    res.redirect(
+      `${config.app_url}/customer/payments?status=success&orderId=${orderId}&tranId=${tranId}`,
+    );
   } else if (response === 'fail') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=failed`);
+    res.redirect(
+      `${config.app_url}/customer/payments?status=failed&orderId=${orderId}`,
+    );
   } else if (response === 'cancel') {
-    res.redirect(`${config.app_url}/dashboard/payments?status=cancelled`);
+    res.redirect(
+      `${config.app_url}/customer/payments?status=cancelled&orderId=${orderId}`,
+    );
   }
 });
 

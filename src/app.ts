@@ -18,7 +18,12 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: config.app_url,
+    origin: [
+      config.app_url as string,
+      'http://localhost:3000',
+      'https://gearup-rent.netlify.app',
+      'https://gear-up-self.vercel.app',
+    ],
     credentials: true,
   }),
 );
@@ -29,6 +34,10 @@ app.use(cookieParser());
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Gear up application is running...');
+});
+
+app.get('/api', (req: Request, res: Response) => {
+  res.send('Gear up application is running 333333...');
 });
 
 app.use('/api/auth', authRoutes);

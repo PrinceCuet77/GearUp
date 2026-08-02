@@ -27,4 +27,10 @@ router.patch(
   userController.changeMyPassword,
 );
 
+router.get(
+  '/dashboard',
+  auth(UserRole.CUSTOMER),
+  userController.getCustomerDashboard,
+);
+
 export const userRoutes = router;

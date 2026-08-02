@@ -97,6 +97,17 @@ const getAllGears = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAdminDashboard = catchAsync(async (req: Request, res: Response) => {
+  const data = await adminService.getAdminDashboard();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Admin dashboard fetched successfully',
+    data,
+  });
+});
+
 export const adminController = {
   getAllUserDetails,
   getUserDetailsById,
@@ -105,4 +116,5 @@ export const adminController = {
   updateCategory,
   getCategoryById,
   getAllGears,
+  getAdminDashboard,
 };

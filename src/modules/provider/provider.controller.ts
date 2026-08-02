@@ -133,6 +133,18 @@ const updateOrderStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getProviderDashboard = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.userId as string;
+  const data = await providerService.getProviderDashboard(providerId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Provider dashboard fetched successfully',
+    data,
+  });
+});
+
 export const providerController = {
   getGearById,
   createGear,
@@ -142,4 +154,5 @@ export const providerController = {
   getProviderOrders,
   getProviderOrderById,
   updateOrderStatus,
+  getProviderDashboard,
 };

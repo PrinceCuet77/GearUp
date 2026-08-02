@@ -7,9 +7,17 @@ import {
   createReviewSchema,
   updateReviewSchema,
   reviewParamsSchema,
+  paginationQuerySchema,
 } from './review.validation';
 
 const router = Router();
+
+router.get(
+  '/',
+  auth(UserRole.CUSTOMER),
+  validate(paginationQuerySchema, 'query'),
+  reviewController.getMyReviews,
+);
 
 router.get(
   '/:reviewId',

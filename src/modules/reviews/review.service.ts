@@ -41,34 +41,28 @@ const createReview = async (
     );
   }
 
-  const firstItem = rentalOrder.items[0];
-  if (!firstItem) {
+  if (!rentalOrder.items.length) {
     throw new BadRequestError('This rental order has no gear items to review');
   }
 
-  const gearItemId = firstItem.gearItemId;
-
-  // Check if the customer already reviewed this gear item for this order
+  // Check if the customer already reviewed this rental order
   const existingReview = await prisma.review.findFirst({
     where: {
       customerId,
       rentalOrderId,
-      gearItemId,
     },
   });
 
   if (existingReview) {
-    throw new BadRequestError(
-      'You have already reviewed this gear item for this rental order',
-    );
+    throw new BadRequestError('You have already reviewed this rental order');
   }
 
-  // Create the review
-  const review = await prisma.review.create({
+  // Create a single review for the rental order (items[0] is guaranteed by length check above)
+  const createdReview = await prisma.review.create({
     data: {
       customerId,
       rentalOrderId,
-      gearItemId,
+      gearItemId: rentalOrder.items[0]!.gearItemId,
       rating,
       comment,
     },
@@ -83,6 +77,7 @@ const createReview = async (
           id: true,
           name: true,
           email: true,
+          avatarUrl: true,
         },
       },
       gearItem: {
@@ -100,7 +95,7 @@ const createReview = async (
     },
   });
 
-  return review;
+  return createdReview;
 };
 
 const getReviewById = async (customerId: string, reviewId: string) => {
@@ -145,7 +140,7 @@ const updateReview = async (
   reviewId: string,
   payload: IUpdateReviewPayload,
 ) => {
-  // Check if the review exists
+  // Find the review to get the rental order ID
   const existingReview = await prisma.review.findUnique({
     where: { id: reviewId },
   });
@@ -159,10 +154,21 @@ const updateReview = async (
     throw new ForbiddenError('You are not authorized to update this review');
   }
 
-  // Update the review
-  const updatedReview = await prisma.review.update({
-    where: { id: reviewId },
+  // Update ALL reviews for this rental order
+  await prisma.review.updateMany({
+    where: {
+      rentalOrderId: existingReview.rentalOrderId,
+      customerId,
+    },
     data: payload,
+  });
+
+  // Return the first review with full relations
+  const updatedReview = await prisma.review.findFirst({
+    where: {
+      rentalOrderId: existingReview.rentalOrderId,
+      customerId,
+    },
     include: {
       customer: {
         select: {
@@ -190,7 +196,7 @@ const updateReview = async (
 };
 
 const deleteReview = async (customerId: string, reviewId: string) => {
-  // Check if the review exists
+  // Find the review to get the rental order ID
   const existingReview = await prisma.review.findUnique({
     where: { id: reviewId },
   });
@@ -204,16 +210,88 @@ const deleteReview = async (customerId: string, reviewId: string) => {
     throw new ForbiddenError('You are not authorized to delete this review');
   }
 
-  // Delete the review
-  await prisma.review.delete({
-    where: { id: reviewId },
+  // Delete ALL reviews for this rental order
+  await prisma.review.deleteMany({
+    where: {
+      rentalOrderId: existingReview.rentalOrderId,
+      customerId,
+    },
   });
 
   return existingReview;
 };
 
+const getMyReviews = async (
+  customerId: string,
+  query: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  },
+) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const sortBy = query.sortBy || 'createdAt';
+  const sortOrder = query.sortOrder || 'desc';
+
+  const skip = (page - 1) * limit;
+
+  // Find distinct rental order IDs reviewed by this customer
+  const reviewedRentals = await prisma.review.findMany({
+    where: { customerId },
+    select: { rentalOrderId: true },
+    distinct: ['rentalOrderId'],
+  });
+
+  const rentalOrderIds = reviewedRentals.map((r) => r.rentalOrderId);
+
+  const total = rentalOrderIds.length;
+
+  // Get one review per rental order
+  const reviews = await prisma.review.findMany({
+    where: {
+      customerId,
+      rentalOrderId: { in: rentalOrderIds },
+    },
+    distinct: ['rentalOrderId'],
+    include: {
+      gearItem: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      rentalOrder: {
+        select: {
+          id: true,
+          status: true,
+        },
+      },
+    },
+    orderBy: {
+      [sortBy]: sortOrder,
+    },
+    skip,
+    take: limit,
+  });
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    reviews,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
+};
+
 export const reviewService = {
   getReviewById,
+  getMyReviews,
   createReview,
   updateReview,
   deleteReview,

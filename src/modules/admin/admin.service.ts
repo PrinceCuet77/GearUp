@@ -203,6 +203,25 @@ const getAllGears = async (query: {
   };
 };
 
+const getAdminDashboard = async () => {
+  const [totalUsers, activeGears, totalRentals, totalCategories] =
+    await Promise.all([
+      prisma.user.count(),
+      prisma.gearItem.count({ where: { isActive: true } }),
+      prisma.rentalOrder.count(),
+      prisma.category.count(),
+    ]);
+
+  return {
+    stats: {
+      totalUsers,
+      activeGears,
+      totalRentals,
+      totalCategories,
+    },
+  };
+};
+
 export const adminService = {
   getAllUsers,
   getUserDetailsById,
@@ -211,4 +230,5 @@ export const adminService = {
   updateCategory,
   getCategoryById,
   getAllGears,
+  getAdminDashboard,
 };

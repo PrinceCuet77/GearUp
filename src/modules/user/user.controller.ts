@@ -40,8 +40,21 @@ const changeMyPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getCustomerDashboard = catchAsync(async (req: Request, res: Response) => {
+  const customerId = req.user?.userId as string;
+  const data = await userService.getCustomerDashboard(customerId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Customer dashboard fetched successfully',
+    data,
+  });
+});
+
 export const userController = {
   getUserDetails,
   updateMyProfile,
   changeMyPassword,
+  getCustomerDashboard,
 };

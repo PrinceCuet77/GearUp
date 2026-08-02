@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+export const paginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(10).optional(),
+  sortBy: z.enum(['createdAt', 'rating']).default('createdAt').optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
+});
+
 export const createReviewSchema = z.object({
   rentalOrderId: z.string().min(1, 'Rental order ID is required'),
   rating: z
@@ -23,7 +30,7 @@ export const updateReviewSchema = z.object({
   comment: z
     .string()
     .min(1, 'Comment cannot be empty')
-    .max(1000, 'Comment cannot exceed 1000 characters')
+    .max(100, 'Comment cannot exceed 100 characters')
     .optional(),
 });
 

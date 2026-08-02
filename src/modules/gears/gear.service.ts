@@ -67,6 +67,16 @@ const getAllGears = async (query: IGetAllGearsQuery) => {
             gearItemId: true,
             rentalOrderId: true,
           },
+          include: {
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
         },
       },
       orderBy: {
@@ -115,6 +125,8 @@ const getGearById = async (gearId: string) => {
             select: {
               id: true,
               name: true,
+              email: true,
+              avatarUrl: true,
             },
           },
         },
@@ -149,6 +161,7 @@ const getGearReviews = async (gearId: string, query: IGetGearReviewsQuery) => {
             id: true,
             name: true,
             email: true,
+            avatarUrl: true,
           },
         },
       },

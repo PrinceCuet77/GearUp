@@ -72,4 +72,10 @@ router.patch(
   providerController.updateOrderStatus,
 );
 
+router.get(
+  '/dashboard',
+  auth(UserRole.PROVIDER),
+  providerController.getProviderDashboard,
+);
+
 export const providerRoutes = router;
