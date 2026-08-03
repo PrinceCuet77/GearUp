@@ -26,7 +26,13 @@ const createRental = async (
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  if (start < new Date()) {
+  // Compare only the date portion (ignore time) to avoid timezone/time-of-day issues
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startOnlyDate = new Date(start);
+  startOnlyDate.setHours(0, 0, 0, 0);
+
+  if (startOnlyDate < today) {
     throw new BadRequestError('Start date cannot be in the past');
   }
 

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ZodSchema } from 'zod';
 import { BadRequestError } from '../errors/ApiError';
 
-type ValidateSource = 'body' | 'query' | 'params';
+type ValidateSource = 'body' | 'query' | 'params' | 'cookies';
 
 export const validate = (
   schema: ZodSchema,
@@ -23,6 +23,8 @@ export const validate = (
       Object.assign(req.query, result.data);
     } else if (source === 'params') {
       Object.assign(req.params, result.data);
+    } else if (source === 'cookies') {
+      (req as any).validatedCookies = result.data;
     }
 
     next();

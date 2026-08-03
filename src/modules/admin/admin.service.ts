@@ -7,8 +7,8 @@ const getAllUsers = async (query: {
   search?: string;
   role?: string;
   status?: string;
-  page?: number;
-  limit?: number;
+  page?: string | number;
+  limit?: string | number;
   sortBy?: string;
   sortOrder?: string;
 }) => {
@@ -16,11 +16,12 @@ const getAllUsers = async (query: {
     search,
     role,
     status,
-    page = 1,
-    limit = 10,
     sortBy = 'createdAt',
     sortOrder = 'desc',
   } = query;
+
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const where: Prisma.UserWhereInput = {};
 
@@ -39,7 +40,7 @@ const getAllUsers = async (query: {
     where.status = status as any;
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
+  const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([
     prisma.user.findMany({
@@ -51,18 +52,18 @@ const getAllUsers = async (query: {
         [sortBy as string]: sortOrder,
       },
       skip,
-      take: Number(limit),
+      take: limit,
     }),
     prisma.user.count({ where }),
   ]);
 
-  const totalPages = Math.ceil(total / Number(limit));
+  const totalPages = Math.ceil(total / limit);
 
   return {
     data,
     meta: {
-      page: Number(page),
-      limit: Number(limit),
+      page,
+      limit,
       total,
       totalPages,
     },
@@ -176,24 +177,22 @@ const getCategoryById = async (categoryId: string) => {
 
 const getAllGears = async (query: {
   category?: string;
-  minPrice?: number;
-  maxPrice?: number;
+  minPrice?: string | number;
+  maxPrice?: string | number;
   search?: string;
-  page?: number;
-  limit?: number;
+  page?: string | number;
+  limit?: string | number;
   sortBy?: string;
   sortOrder?: string;
 }) => {
-  const {
-    category,
-    minPrice,
-    maxPrice,
-    search,
-    page = 1,
-    limit = 10,
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
-  } = query;
+  const { category, search, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+
+  const minPrice =
+    query.minPrice !== undefined ? Number(query.minPrice) : undefined;
+  const maxPrice =
+    query.maxPrice !== undefined ? Number(query.maxPrice) : undefined;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
 
   const where: Prisma.GearItemWhereInput = {};
 
@@ -205,11 +204,11 @@ const getAllGears = async (query: {
     where.price = {};
 
     if (minPrice !== undefined) {
-      where.price.gte = Number(minPrice);
+      where.price.gte = minPrice;
     }
 
     if (maxPrice !== undefined) {
-      where.price.lte = Number(maxPrice);
+      where.price.lte = maxPrice;
     }
   }
 
@@ -220,7 +219,7 @@ const getAllGears = async (query: {
     ];
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
+  const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([
     prisma.gearItem.findMany({
@@ -239,18 +238,18 @@ const getAllGears = async (query: {
         [sortBy as string]: sortOrder,
       },
       skip,
-      take: Number(limit),
+      take: limit,
     }),
     prisma.gearItem.count({ where }),
   ]);
 
-  const totalPages = Math.ceil(total / Number(limit));
+  const totalPages = Math.ceil(total / limit);
 
   return {
     data,
     meta: {
-      page: Number(page),
-      limit: Number(limit),
+      page,
+      limit,
       total,
       totalPages,
     },
