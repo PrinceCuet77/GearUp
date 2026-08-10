@@ -17,4 +17,7 @@ export default {
   jwt_refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN!,
   ssl_commerz_store_id: process.env.SSL_COMMERZ_STORE_ID,
   ssl_commerz_store_passwd: process.env.SSL_COMMERZ_STORE_PASSWORD,
+  google_client_id: process.env.GOOGLE_CLIENT_ID,
+  google_client_secret: process.env.GOOGLE_CLIENT_SECRET,
+  google_redirect_uri: process.env.GOOGLE_REDIRECT_URI,
 };
