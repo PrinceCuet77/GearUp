@@ -175,7 +175,7 @@ export type UserGroupByOutputType = {
   id: string
   name: string | null
   email: string
-  password: string
+  password: string | null
   role: $Enums.UserRole
   status: $Enums.UserStatus
   avatarUrl: string | null
@@ -208,7 +208,7 @@ export type UserWhereInput = {
   id?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringNullableFilter<"User"> | string | null
   email?: Prisma.StringFilter<"User"> | string
-  password?: Prisma.StringFilter<"User"> | string
+  password?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   avatarUrl?: Prisma.StringNullableFilter<"User"> | string | null
@@ -217,13 +217,14 @@ export type UserWhereInput = {
   gearItems?: Prisma.GearItemListRelationFilter
   rentalOrders?: Prisma.RentalOrderListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  auths?: Prisma.AuthListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrder
-  password?: Prisma.SortOrder
+  password?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -232,6 +233,7 @@ export type UserOrderByWithRelationInput = {
   gearItems?: Prisma.GearItemOrderByRelationAggregateInput
   rentalOrders?: Prisma.RentalOrderOrderByRelationAggregateInput
   reviews?: Prisma.ReviewOrderByRelationAggregateInput
+  auths?: Prisma.AuthOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -241,7 +243,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringNullableFilter<"User"> | string | null
-  password?: Prisma.StringFilter<"User"> | string
+  password?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   avatarUrl?: Prisma.StringNullableFilter<"User"> | string | null
@@ -250,13 +252,14 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   gearItems?: Prisma.GearItemListRelationFilter
   rentalOrders?: Prisma.RentalOrderListRelationFilter
   reviews?: Prisma.ReviewListRelationFilter
+  auths?: Prisma.AuthListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrder
-  password?: Prisma.SortOrder
+  password?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   status?: Prisma.SortOrder
   avatarUrl?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -274,7 +277,7 @@ export type UserScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   email?: Prisma.StringWithAggregatesFilter<"User"> | string
-  password?: Prisma.StringWithAggregatesFilter<"User"> | string
+  password?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
   status?: Prisma.EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
   avatarUrl?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -286,7 +289,7 @@ export type UserCreateInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -295,13 +298,14 @@ export type UserCreateInput = {
   gearItems?: Prisma.GearItemCreateNestedManyWithoutProviderInput
   rentalOrders?: Prisma.RentalOrderCreateNestedManyWithoutCustomerInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -310,13 +314,14 @@ export type UserUncheckedCreateInput = {
   gearItems?: Prisma.GearItemUncheckedCreateNestedManyWithoutProviderInput
   rentalOrders?: Prisma.RentalOrderUncheckedCreateNestedManyWithoutCustomerInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -325,13 +330,14 @@ export type UserUpdateInput = {
   gearItems?: Prisma.GearItemUpdateManyWithoutProviderNestedInput
   rentalOrders?: Prisma.RentalOrderUpdateManyWithoutCustomerNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -340,13 +346,14 @@ export type UserUncheckedUpdateInput = {
   gearItems?: Prisma.GearItemUncheckedUpdateManyWithoutProviderNestedInput
   rentalOrders?: Prisma.RentalOrderUncheckedUpdateManyWithoutCustomerNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -358,7 +365,7 @@ export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -370,7 +377,7 @@ export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -417,6 +424,20 @@ export type UserMinOrderByAggregateInput = {
   avatarUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserCreateNestedOneWithoutAuthsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthsInput, Prisma.UserUncheckedCreateWithoutAuthsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAuthsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuthsInput, Prisma.UserUncheckedCreateWithoutAuthsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuthsInput
+  upsert?: Prisma.UserUpsertWithoutAuthsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuthsInput, Prisma.UserUpdateWithoutAuthsInput>, Prisma.UserUncheckedUpdateWithoutAuthsInput>
 }
 
 export type UserCreateNestedOneWithoutGearItemsInput = {
@@ -469,11 +490,87 @@ export type EnumUserStatusFieldUpdateOperationsInput = {
   set?: $Enums.UserStatus
 }
 
+export type UserCreateWithoutAuthsInput = {
+  id?: string
+  name?: string | null
+  email: string
+  password?: string | null
+  role: $Enums.UserRole
+  status?: $Enums.UserStatus
+  avatarUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  gearItems?: Prisma.GearItemCreateNestedManyWithoutProviderInput
+  rentalOrders?: Prisma.RentalOrderCreateNestedManyWithoutCustomerInput
+  reviews?: Prisma.ReviewCreateNestedManyWithoutCustomerInput
+}
+
+export type UserUncheckedCreateWithoutAuthsInput = {
+  id?: string
+  name?: string | null
+  email: string
+  password?: string | null
+  role: $Enums.UserRole
+  status?: $Enums.UserStatus
+  avatarUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  gearItems?: Prisma.GearItemUncheckedCreateNestedManyWithoutProviderInput
+  rentalOrders?: Prisma.RentalOrderUncheckedCreateNestedManyWithoutCustomerInput
+  reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutCustomerInput
+}
+
+export type UserCreateOrConnectWithoutAuthsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthsInput, Prisma.UserUncheckedCreateWithoutAuthsInput>
+}
+
+export type UserUpsertWithoutAuthsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAuthsInput, Prisma.UserUncheckedUpdateWithoutAuthsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuthsInput, Prisma.UserUncheckedCreateWithoutAuthsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAuthsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAuthsInput, Prisma.UserUncheckedUpdateWithoutAuthsInput>
+}
+
+export type UserUpdateWithoutAuthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  gearItems?: Prisma.GearItemUpdateManyWithoutProviderNestedInput
+  rentalOrders?: Prisma.RentalOrderUpdateManyWithoutCustomerNestedInput
+  reviews?: Prisma.ReviewUpdateManyWithoutCustomerNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAuthsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  gearItems?: Prisma.GearItemUncheckedUpdateManyWithoutProviderNestedInput
+  rentalOrders?: Prisma.RentalOrderUncheckedUpdateManyWithoutCustomerNestedInput
+  reviews?: Prisma.ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+}
+
 export type UserCreateWithoutGearItemsInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -481,13 +578,14 @@ export type UserCreateWithoutGearItemsInput = {
   updatedAt?: Date | string
   rentalOrders?: Prisma.RentalOrderCreateNestedManyWithoutCustomerInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGearItemsInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -495,6 +593,7 @@ export type UserUncheckedCreateWithoutGearItemsInput = {
   updatedAt?: Date | string
   rentalOrders?: Prisma.RentalOrderUncheckedCreateNestedManyWithoutCustomerInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGearItemsInput = {
@@ -517,7 +616,7 @@ export type UserUpdateWithoutGearItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -525,13 +624,14 @@ export type UserUpdateWithoutGearItemsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rentalOrders?: Prisma.RentalOrderUpdateManyWithoutCustomerNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGearItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -539,13 +639,14 @@ export type UserUncheckedUpdateWithoutGearItemsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rentalOrders?: Prisma.RentalOrderUncheckedUpdateManyWithoutCustomerNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRentalOrdersInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -553,13 +654,14 @@ export type UserCreateWithoutRentalOrdersInput = {
   updatedAt?: Date | string
   gearItems?: Prisma.GearItemCreateNestedManyWithoutProviderInput
   reviews?: Prisma.ReviewCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRentalOrdersInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -567,6 +669,7 @@ export type UserUncheckedCreateWithoutRentalOrdersInput = {
   updatedAt?: Date | string
   gearItems?: Prisma.GearItemUncheckedCreateNestedManyWithoutProviderInput
   reviews?: Prisma.ReviewUncheckedCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRentalOrdersInput = {
@@ -589,7 +692,7 @@ export type UserUpdateWithoutRentalOrdersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -597,13 +700,14 @@ export type UserUpdateWithoutRentalOrdersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   gearItems?: Prisma.GearItemUpdateManyWithoutProviderNestedInput
   reviews?: Prisma.ReviewUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRentalOrdersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -611,13 +715,14 @@ export type UserUncheckedUpdateWithoutRentalOrdersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   gearItems?: Prisma.GearItemUncheckedUpdateManyWithoutProviderNestedInput
   reviews?: Prisma.ReviewUncheckedUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReviewsInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -625,13 +730,14 @@ export type UserCreateWithoutReviewsInput = {
   updatedAt?: Date | string
   gearItems?: Prisma.GearItemCreateNestedManyWithoutProviderInput
   rentalOrders?: Prisma.RentalOrderCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReviewsInput = {
   id?: string
   name?: string | null
   email: string
-  password: string
+  password?: string | null
   role: $Enums.UserRole
   status?: $Enums.UserStatus
   avatarUrl?: string | null
@@ -639,6 +745,7 @@ export type UserUncheckedCreateWithoutReviewsInput = {
   updatedAt?: Date | string
   gearItems?: Prisma.GearItemUncheckedCreateNestedManyWithoutProviderInput
   rentalOrders?: Prisma.RentalOrderUncheckedCreateNestedManyWithoutCustomerInput
+  auths?: Prisma.AuthUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReviewsInput = {
@@ -661,7 +768,7 @@ export type UserUpdateWithoutReviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -669,13 +776,14 @@ export type UserUpdateWithoutReviewsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   gearItems?: Prisma.GearItemUpdateManyWithoutProviderNestedInput
   rentalOrders?: Prisma.RentalOrderUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email?: Prisma.StringFieldUpdateOperationsInput | string
-  password?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -683,6 +791,7 @@ export type UserUncheckedUpdateWithoutReviewsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   gearItems?: Prisma.GearItemUncheckedUpdateManyWithoutProviderNestedInput
   rentalOrders?: Prisma.RentalOrderUncheckedUpdateManyWithoutCustomerNestedInput
+  auths?: Prisma.AuthUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -694,12 +803,14 @@ export type UserCountOutputType = {
   gearItems: number
   rentalOrders: number
   reviews: number
+  auths: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   gearItems?: boolean | UserCountOutputTypeCountGearItemsArgs
   rentalOrders?: boolean | UserCountOutputTypeCountRentalOrdersArgs
   reviews?: boolean | UserCountOutputTypeCountReviewsArgs
+  auths?: boolean | UserCountOutputTypeCountAuthsArgs
 }
 
 /**
@@ -733,6 +844,13 @@ export type UserCountOutputTypeCountReviewsArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.ReviewWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAuthsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AuthWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -747,6 +865,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   gearItems?: boolean | Prisma.User$gearItemsArgs<ExtArgs>
   rentalOrders?: boolean | Prisma.User$rentalOrdersArgs<ExtArgs>
   reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>
+  auths?: boolean | Prisma.User$authsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -791,6 +910,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   gearItems?: boolean | Prisma.User$gearItemsArgs<ExtArgs>
   rentalOrders?: boolean | Prisma.User$rentalOrdersArgs<ExtArgs>
   reviews?: boolean | Prisma.User$reviewsArgs<ExtArgs>
+  auths?: boolean | Prisma.User$authsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -802,12 +922,13 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     gearItems: Prisma.$GearItemPayload<ExtArgs>[]
     rentalOrders: Prisma.$RentalOrderPayload<ExtArgs>[]
     reviews: Prisma.$ReviewPayload<ExtArgs>[]
+    auths: Prisma.$AuthPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string | null
     email: string
-    password: string
+    password: string | null
     role: $Enums.UserRole
     status: $Enums.UserStatus
     avatarUrl: string | null
@@ -1210,6 +1331,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   gearItems<T extends Prisma.User$gearItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$gearItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GearItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   rentalOrders<T extends Prisma.User$rentalOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$rentalOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RentalOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviews<T extends Prisma.User$reviewsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  auths<T extends Prisma.User$authsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$authsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuthPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1710,6 +1832,30 @@ export type User$reviewsArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.ReviewScalarFieldEnum | Prisma.ReviewScalarFieldEnum[]
+}
+
+/**
+ * User.auths
+ */
+export type User$authsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Auth
+   */
+  select?: Prisma.AuthSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Auth
+   */
+  omit?: Prisma.AuthOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AuthInclude<ExtArgs> | null
+  where?: Prisma.AuthWhereInput
+  orderBy?: Prisma.AuthOrderByWithRelationInput | Prisma.AuthOrderByWithRelationInput[]
+  cursor?: Prisma.AuthWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AuthScalarFieldEnum | Prisma.AuthScalarFieldEnum[]
 }
 
 /**

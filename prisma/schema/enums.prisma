@@ -23,3 +23,8 @@ enum PaymentStatus {
   COMPLETED
   FAILED
 }
+
+enum AuthProvider {
+   CREDENTIALS
+   GOOGLE
+}

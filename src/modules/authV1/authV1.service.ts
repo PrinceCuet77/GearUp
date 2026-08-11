@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs';
 import config from '../../config';
 import { prisma } from '../../lib/prisma';
-import { ILoginUserPayload, IRegistrationUserPayload } from './auth.interface';
+import {
+  ILoginUserPayload,
+  IRegistrationUserPayload,
+} from './authV1.interface';
 import {
   ConflictError,
   ForbiddenError,
@@ -47,6 +50,30 @@ const registerUserIntoDB = async (payload: IRegistrationUserPayload) => {
   return user;
 };
 
+/**
+ * Shared by both password login and the Google callback, so a social login
+ * produces exactly the same tokens as a credentials login.
+ */
+const createAuthTokens = (jwtPayload: {
+  userId: string;
+  email: string;
+  role: UserRole;
+}) => {
+  const accessToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt_access_secret,
+    config.jwt_access_expires_in as SignOptions,
+  );
+
+  const refreshToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt_refresh_secret,
+    config.jwt_refresh_expires_in as SignOptions,
+  );
+
+  return { accessToken, refreshToken };
+};
+
 const loginUser = async (payload: ILoginUserPayload) => {
   const { email, password } = payload;
 
@@ -64,8 +91,7 @@ const loginUser = async (payload: ILoginUserPayload) => {
     );
   }
 
-  // `password` is nullable since Google sign-in landed — social-only accounts
-  // have nothing to compare against.
+  // Social-only accounts have no password to compare against.
   if (!user.password) {
     throw new UnauthorizedError(
       'This account was created with Google. Please continue with Google.',
@@ -78,26 +104,17 @@ const loginUser = async (payload: ILoginUserPayload) => {
     throw new UnauthorizedError('Invalid password');
   }
 
-  const jwtPayload = {
+  const { accessToken, refreshToken } = createAuthTokens({
     userId: user.id,
     email: user.email,
     role: user.role,
-  };
+  });
 
-  const accessToken = jwtUtils.createToken(
-    jwtPayload,
-    config.jwt_access_secret,
-    config.jwt_access_expires_in as SignOptions,
-  );
-
-  const refreshToken = jwtUtils.createToken(
-    jwtPayload,
-    config.jwt_refresh_secret,
-    config.jwt_refresh_expires_in as SignOptions,
-  );
+  // Never ship the password hash back to the client.
+  const { password: _password, ...safeUser } = user;
 
   return {
-    user,
+    user: safeUser,
     accessToken,
     refreshToken,
   };
@@ -119,14 +136,8 @@ const refreshToken = async (refreshToken: string) => {
     role: UserRole;
   };
 
-  const jwtPayload = {
-    userId,
-    email,
-    role,
-  };
-
   const accessToken = jwtUtils.createToken(
-    jwtPayload,
+    { userId, email, role },
     config.jwt_access_secret,
     config.jwt_access_expires_in as SignOptions,
   );
@@ -136,8 +147,9 @@ const refreshToken = async (refreshToken: string) => {
   };
 };
 
-export const authService = {
+export const authV1Service = {
   registerUserIntoDB,
   loginUser,
   refreshToken,
+  createAuthTokens,
 };

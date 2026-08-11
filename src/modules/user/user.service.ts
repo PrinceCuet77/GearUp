@@ -1,7 +1,11 @@
 import bcrypt from 'bcryptjs';
 import { RentalStatus } from '../../../generated/prisma/enums';
 import { prisma } from '../../lib/prisma';
-import { NotFoundError, UnauthorizedError } from '../../errors/ApiError';
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from '../../errors/ApiError';
 
 const getUserDetailsFromDB = async (userId: string) => {
   const user = await prisma.user.findUnique({
@@ -49,6 +53,13 @@ const changeMyPasswordInDB = async (
 
   if (!user) {
     throw new NotFoundError('User not found');
+  }
+
+  // Google-only accounts have no password to change.
+  if (!user.password) {
+    throw new BadRequestError(
+      'This account signs in with Google and has no password to change.',
+    );
   }
 
   const isPasswordValid = await bcrypt.compare(

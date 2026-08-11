@@ -13,15 +13,20 @@ import {
 
 declare global {
   namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: UserRole;
-      };
+    // Augments Express.User rather than Request.user: @types/passport already
+    // declares `Request.user?: Express.User`, and re-declaring the property
+    // with a different type is a conflict. `req.user` stays `AuthUser |
+    // undefined` and every existing `req.user.userId` call site is unaffected.
+    interface User {
+      userId: string;
+      email: string;
+      role: UserRole;
     }
   }
 }
+
+/** The shape attached to `req.user` and returned by every passport strategy. */
+export type AuthUser = Express.User;
 
 export const auth = (...requiredRoles: UserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {

@@ -2,7 +2,8 @@ model User {
   id        String     @id @default(uuid())
   name      String?
   email     String     @unique
-  password  String
+  // Null for users who only ever signed in through a social provider.
+  password  String?
   role      UserRole
   status    UserStatus @default(ACTIVE)
   avatarUrl String?
@@ -15,6 +16,8 @@ model User {
   // Customer side
   rentalOrders RentalOrder[]
   reviews      Review[]
+
+  auths Auth[]
 
   @@map("users")
 }
