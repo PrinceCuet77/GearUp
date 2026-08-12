@@ -1,19 +1,25 @@
 import { NextFunction, Request, Response } from 'express';
 import httpStatus from 'http-status';
-import passport from '../../config/passport';
 import { authV1Service } from './authV1.service';
 import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
+import passport from 'passport';
+import { createAuthTokens } from '../../utils/createAuthToken';
+import {
+  accessTokenCookieOptions,
+  clearAuthCookies,
+  setAuthCookies,
+} from '../../utils/authCookies';
 import {
   createOAuthState,
+  defaultLandingPath,
+  isSafeRedirectPath,
   parseOAuthState,
   resolveFrontendRedirect,
   SelectableRole,
 } from '../../utils/oauthState';
-import type { AuthUser } from '../../middleware/auth';
-import { UserRole } from '../../../generated/prisma/enums';
-
-const OAUTH_STATE_COOKIE = 'oauthState';
+import { isAllowedOrigin } from '../../config/cors';
+import { BadRequestError } from '../../errors/ApiError';
 
 const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -28,32 +34,35 @@ const registerUser = catchAsync(
   },
 );
 
-const loginUser = catchAsync(
+const credentialLoginUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { user, accessToken, refreshToken } = await authV1Service.loginUser(
-      req.body,
-    );
+    passport.authenticate('local', async (err: any, user: any, info: any) => {
+      try {
+        if (err) {
+          return next(err);
+        }
+        if (!user) {
+          return next(new Error(info?.message || 'Invalid credentials!'));
+        }
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-    });
+        const { accessToken, refreshToken } = createAuthTokens({
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+        });
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
-    });
+        setAuthCookies(res, { accessToken, refreshToken });
 
-    sendResponse(res, {
-      success: true,
-      statusCode: httpStatus.OK,
-      message: 'User logged in successfully',
-      data: { user, accessToken, refreshToken },
-    });
+        sendResponse(res, {
+          success: true,
+          statusCode: httpStatus.OK,
+          message: 'User logged in successfully',
+          data: { user, accessToken, refreshToken },
+        });
+      } catch (error) {
+        next(error);
+      }
+    })(req, res, next);
   },
 );
 
@@ -63,12 +72,7 @@ const refreshToken = catchAsync(
       req.cookies.refreshToken,
     );
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-    });
+    res.cookie('accessToken', accessToken, accessTokenCookieOptions);
 
     sendResponse(res, {
       success: true,
@@ -83,8 +87,7 @@ const refreshToken = catchAsync(
 
 const logout = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    clearAuthCookies(res);
 
     sendResponse(res, {
       success: true,
@@ -96,120 +99,143 @@ const logout = catchAsync(
 );
 
 /**
- * Step 1 — the browser lands here from the Customer/Provider tile as a full
- * page navigation (not fetch). The selected role is folded into a signed
- * `state` param so it survives the round trip through Google, and the state's
- * nonce is mirrored into a short-lived cookie for CSRF protection.
+ * Starts the Google flow. The role tile the user clicked, the frontend path to
+ * return to, and the frontend origin the click happened on are packed into a
+ * signed `state` param — Google hands it back to the callback untouched, and it
+ * is the only channel available (the callback is a fresh top-level navigation
+ * from Google, so nothing from this request's session or cookies is guaranteed
+ * to survive it).
  */
-const startGoogleAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-  role?: SelectableRole,
-) => {
-  const { redirect } = req.query as { redirect?: string };
+const startGoogleAuth = (role?: SelectableRole) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const requestedRedirect = req.query.redirect;
 
-  const { state, nonce } = createOAuthState({ role, redirect });
+    if (requestedRedirect !== undefined && !isSafeRedirectPath(requestedRedirect)) {
+      throw new BadRequestError(
+        'redirect must be a relative path starting with "/"',
+      );
+    }
 
-  res.cookie(OAUTH_STATE_COOKIE, nonce, {
-    httpOnly: true,
-    secure: false,
-    // Lax, not none: the Google -> API callback is a top-level navigation, so
-    // the cookie still comes back, and Lax works without HTTPS in dev.
-    sameSite: 'lax',
-    maxAge: 1000 * 60 * 10, // 10 minutes
-  });
+    const { state } = createOAuthState({
+      role,
+      redirect: requestedRedirect,
+      origin: resolveRequestOrigin(req),
+    });
 
-  passport.authenticate('google', {
-    session: false,
-    state,
-    prompt: 'select_account',
-  })(req, res, next);
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      session: false,
+      state,
+    })(req, res, next);
+  };
 };
 
-// Dedicated entry points — the role is fixed by the route itself, so the
-// customer frontend and the provider frontend each hit their own URL instead
-// of passing `role` on the query string.
-const googleAuthCustomer = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => startGoogleAuth(req, res, next, UserRole.CUSTOMER);
-
-const googleAuthProvider = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => startGoogleAuth(req, res, next, UserRole.PROVIDER);
-
 /**
- * Step 2 — Google redirects here with `?code=...&state=...`. We verify the
- * state, let the strategy find-or-create the user, then set the same auth
- * cookies as a normal login and bounce back to the frontend.
+ * Where the browser came from, if we trust it. `Origin` is sent on POSTs;
+ * top-level GET navigations (which is what this is) carry `Referer` instead —
+ * and Chrome's default referrer policy trims it to the bare origin, which is
+ * exactly what's needed here. Anything not on the CORS allowlist is discarded
+ * so `resolveFrontendRedirect` falls back to `APP_URL`.
  */
+const resolveRequestOrigin = (req: Request) => {
+  const candidates = [req.headers.origin, req.headers.referer];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      const origin = new URL(candidate).origin;
+      if (isAllowedOrigin(origin)) return origin;
+    } catch {
+      // Malformed header — ignore it.
+    }
+  }
+
+  return undefined;
+};
+
 const googleCallback = (req: Request, res: Response, next: NextFunction) => {
-  const state = parseOAuthState(req.query.state as string | undefined);
-  const stateNonce = req.cookies?.[OAUTH_STATE_COOKIE];
-  res.clearCookie(OAUTH_STATE_COOKIE, { sameSite: 'lax' });
+  const state = parseOAuthState(
+    typeof req.query.state === 'string' ? req.query.state : undefined,
+  );
 
-  const failureRedirect = (message: string, redirect?: string) =>
-    res.redirect(resolveFrontendRedirect(redirect, { error: message }));
+  const frontendUrl = (args: {
+    query?: Record<string, string | undefined>;
+    fragment?: Record<string, string | undefined>;
+    fallbackPath?: string;
+  }) =>
+    resolveFrontendRedirect({
+      origin: state?.origin,
+      redirect: state?.redirect,
+      fallbackPath: args.fallbackPath ?? '/login',
+      query: args.query,
+      fragment: args.fragment,
+    });
 
-  // Signature invalid, or the nonce doesn't match the cookie we set in step 1
-  // — the flow wasn't started by this browser.
-  if (!state || !stateNonce || state.nonce !== stateNonce) {
-    return failureRedirect('invalid_oauth_state');
+  // A callback without valid, unexpired state was not started by this browser
+  // through our own endpoint (login CSRF, a replayed link, or an abandoned
+  // consent screen), so the code is never exchanged.
+  if (!state) {
+    console.error('Google OAuth callback rejected: invalid or expired state');
+    return res.redirect(frontendUrl({ query: { error: 'invalid_oauth_state' } }));
   }
 
   passport.authenticate(
     'google',
     { session: false },
-    (
-      error: unknown,
-      user: AuthUser | false,
-      info?: { message?: string; isNewUser?: boolean },
-    ) => {
-      if (error) return next(error);
+    async (err: any, user: any, info: any) => {
+      try {
+        if (err || !user) {
+          // `info.message` comes from our own strategy and is safe to show;
+          // anything from the Google exchange collapses to a stable code rather
+          // than leaking gateway wording into the UI.
+          const reason = info?.message || 'google_authentication_failed';
 
-      if (!user) {
-        return failureRedirect(
-          info?.message ?? 'google_authentication_failed',
-          state.redirect,
+          // Redirecting beats rendering the global handler's JSON error: the
+          // browser is mid-navigation and the user would otherwise land on a
+          // raw error payload with no way back into the app.
+          console.error(
+            'Google OAuth callback failed:',
+            err?.message || reason,
+          );
+          return res.redirect(frontendUrl({ query: { error: reason } }));
+        }
+
+        const { accessToken, refreshToken } = createAuthTokens({
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+        });
+
+        // Cookies are first choice, but they are third-party from the
+        // frontend's point of view whenever the two are on different hostnames
+        // (Safari/Firefox and Chrome-incognito drop them outright), so the
+        // tokens also ride back in the URL fragment for the frontend to adopt
+        // as a first-party session. Frontends that rely on the cookies can
+        // simply ignore the fragment.
+        setAuthCookies(res, { accessToken, refreshToken });
+
+        return res.redirect(
+          frontendUrl({
+            fallbackPath: defaultLandingPath(user.role),
+            query: {
+              role: user.role,
+              isNewUser: String(Boolean(user.isNewUser)),
+            },
+            fragment: { accessToken, refreshToken },
+          }),
         );
+      } catch (error) {
+        next(error);
       }
-
-      const { accessToken, refreshToken } =
-        authV1Service.createAuthTokens(user);
-
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'none',
-        maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-      });
-
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'none',
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
-      });
-
-      return res.redirect(
-        resolveFrontendRedirect(state.redirect, {
-          isNewUser: info?.isNewUser ? 'true' : undefined,
-        }),
-      );
     },
   )(req, res, next);
 };
 
-export const authV1Controller = {
+export const authV1Controllers = {
   registerUser,
-  loginUser,
+  credentialLoginUser,
   refreshToken,
   logout,
-  googleAuthCustomer,
-  googleAuthProvider,
+  startGoogleAuth,
   googleCallback,
 };

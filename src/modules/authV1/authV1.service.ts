@@ -13,7 +13,12 @@ import {
 } from '../../errors/ApiError';
 import { jwtUtils } from '../../utils/jwt';
 import { SignOptions } from 'jsonwebtoken';
-import { UserRole, UserStatus } from '../../../generated/prisma/enums';
+import {
+  AuthProvider,
+  UserRole,
+  UserStatus,
+} from '../../../generated/prisma/enums';
+import { createAuthTokens } from '../../utils/createAuthToken';
 
 const registerUserIntoDB = async (payload: IRegistrationUserPayload) => {
   const { email, password, role } = payload;
@@ -35,46 +40,20 @@ const registerUserIntoDB = async (payload: IRegistrationUserPayload) => {
       email,
       password: hashedPassword,
       role,
+      auths: {
+        create: {
+          provider: AuthProvider.CREDENTIALS,
+          providerId: payload.email,
+        },
+      },
     },
   });
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: createdUser.id,
-    },
-    omit: {
-      password: true,
-    },
-  });
-
-  return user;
+  const { password: _password, ...userData } = createdUser;
+  return userData;
 };
 
-/**
- * Shared by both password login and the Google callback, so a social login
- * produces exactly the same tokens as a credentials login.
- */
-const createAuthTokens = (jwtPayload: {
-  userId: string;
-  email: string;
-  role: UserRole;
-}) => {
-  const accessToken = jwtUtils.createToken(
-    jwtPayload,
-    config.jwt_access_secret,
-    config.jwt_access_expires_in as SignOptions,
-  );
-
-  const refreshToken = jwtUtils.createToken(
-    jwtPayload,
-    config.jwt_refresh_secret,
-    config.jwt_refresh_expires_in as SignOptions,
-  );
-
-  return { accessToken, refreshToken };
-};
-
-const loginUser = async (payload: ILoginUserPayload) => {
+const credentialLoginUser = async (payload: ILoginUserPayload) => {
   const { email, password } = payload;
 
   const user = await prisma.user.findUnique({
@@ -149,7 +128,7 @@ const refreshToken = async (refreshToken: string) => {
 
 export const authV1Service = {
   registerUserIntoDB,
-  loginUser,
+  credentialLoginUser,
   refreshToken,
   createAuthTokens,
 };

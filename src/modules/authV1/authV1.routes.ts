@@ -1,48 +1,49 @@
 import { Router } from 'express';
-import { authV1Controller } from './authV1.controller';
+import { authV1Controllers } from './authV1.controller';
 import { validate } from '../../middleware/validate';
 import {
-  googleAuthRedirectQuerySchema,
   loginUserSchema,
   refreshTokenSchema,
   registerUserSchema,
 } from './authV1.validation';
+import { UserRole } from '../../../generated/prisma/enums';
 
 const router = Router();
 
 router.post(
   '/register',
   validate(registerUserSchema),
-  authV1Controller.registerUser,
+  authV1Controllers.registerUser,
 );
 
-router.post('/login', validate(loginUserSchema), authV1Controller.loginUser);
+router.post(
+  '/login',
+  validate(loginUserSchema),
+  authV1Controllers.credentialLoginUser,
+);
 
 router.post(
   '/refresh',
   validate(refreshTokenSchema, 'cookies'),
-  authV1Controller.refreshToken,
+  authV1Controllers.refreshToken,
 );
 
-router.post('/logout', authV1Controller.logout);
+router.post('/logout', authV1Controllers.logout);
 
-// Role-dedicated entry points: the customer frontend hits /google/customer and
-// the provider frontend hits /google/provider, so neither has to pass `role`
-// on the query string — the route itself fixes it server-side.
+// Role-specific entry points: the role tile the user clicked decides which one
+// the frontend navigates to, and it travels through Google in a signed `state`
+// param. `/google` (no role) is kept for the existing frontend and defaults new
+// accounts to CUSTOMER. ADMIN is deliberately not offered.
+router.get('/google', authV1Controllers.startGoogleAuth());
 router.get(
   '/google/customer',
-  validate(googleAuthRedirectQuerySchema, 'query'),
-  authV1Controller.googleAuthCustomer,
+  authV1Controllers.startGoogleAuth(UserRole.CUSTOMER),
 );
-
 router.get(
   '/google/provider',
-  validate(googleAuthRedirectQuerySchema, 'query'),
-  authV1Controller.googleAuthProvider,
+  authV1Controllers.startGoogleAuth(UserRole.PROVIDER),
 );
 
-// Public gateway-style callback — Google calls this, so no auth middleware.
-// The URL must match GOOGLE_REDIRECT_URI and the Google Console entry exactly.
-router.get('/google/callback', authV1Controller.googleCallback);
+router.get('/google/callback', authV1Controllers.googleCallback);
 
 export const authV1Routes = router;

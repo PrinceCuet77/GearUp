@@ -66,8 +66,4 @@ router.get(
   adminController.getAdminDashboard,
 );
 
-router.get('/dummy', () => {
-  console.log('Dummy route for testing');
-});
-
 export const adminRoutes = router;

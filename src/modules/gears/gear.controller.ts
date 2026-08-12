@@ -26,8 +26,6 @@ const getGearById = catchAsync(async (req: Request, res: Response) => {
 const getAllGears = catchAsync(async (req: Request, res: Response) => {
   const result = await gearService.getAllGears(req.query as IGetAllGearsQuery);
 
-  console.log(req.query);
-
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,

@@ -14,15 +14,6 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-// Used by the role-dedicated /google/customer and /google/provider entry
-// points — the role is fixed by the route, so clients only ever pass `redirect`.
-export const googleAuthRedirectQuerySchema = z.object({
-  redirect: z
-    .string()
-    .startsWith('/', 'redirect must be a relative path')
-    .optional(),
-});
-
 export const refreshTokenSchema = z
   .object({
     refreshToken: z.string().min(1, 'Refresh token is required'),

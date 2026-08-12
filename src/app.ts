@@ -2,6 +2,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
 import config from './config';
+import { corsAllowlist, isAllowedOrigin } from './config/cors';
+import passport from 'passport';
 import { notFound } from './middleware/notFound';
 import { globalErrorHandler } from './middleware/globalErrorHandler';
 import { authRoutes } from './modules/auth/auth.routes';
@@ -14,18 +16,30 @@ import { categoryRoutes } from './modules/categories/category.routes';
 import { rentalRoutes } from './modules/rentals/rental.routes';
 import { paymentRoutes } from './modules/payments/payment.routes';
 import { reviewRoutes } from './modules/reviews/review.route';
-import passport from './config/passport';
+import './config/passport';
 
 const app: Application = express();
 
+// Behind Vercel's proxy: without this, req.protocol/req.secure report the
+// internal http hop, so `secure` cookie decisions and redirects go wrong.
+app.set('trust proxy', 1);
+
 app.use(
   cors({
-    origin: [
-      config.app_url as string,
-      'http://localhost:3000',
-      'https://gearup-rent.netlify.app',
-      'https://gear-up-self.vercel.app',
-    ],
+    origin(origin, callback) {
+      // Non-browser callers (curl, Google, SSLCommerz) send no Origin header.
+      if (!origin || isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      // Resolving false (rather than passing an Error) omits the
+      // Access-Control-Allow-Origin header instead of turning every blocked
+      // preflight into a 500 from the global error handler.
+      console.warn(
+        `CORS: blocked origin ${origin}. Allowed: ${corsAllowlist().join(', ')}`,
+      );
+      return callback(null, false);
+    },
     credentials: true,
   }),
 );
@@ -33,7 +47,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-// Stateless: no passport.session() — we issue our own JWT cookies.
 app.use(passport.initialize());
 
 app.get('/', (req: Request, res: Response) => {

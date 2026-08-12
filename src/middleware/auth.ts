@@ -21,6 +21,12 @@ declare global {
       userId: string;
       email: string;
       role: UserRole;
+      /**
+       * Set only by the Google strategy, so the OAuth callback can tell the
+       * frontend whether it just created the account. Never present on
+       * `req.user` behind `auth()`, which rebuilds it from the JWT.
+       */
+      isNewUser?: boolean;
     }
   }
 }

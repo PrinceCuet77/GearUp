@@ -3,6 +3,11 @@ import httpStatus from 'http-status';
 import { authService } from './auth.service';
 import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
+import {
+  accessTokenCookieOptions,
+  clearAuthCookies,
+  setAuthCookies,
+} from '../../utils/authCookies';
 
 const registerUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -23,19 +28,7 @@ const loginUser = catchAsync(
       req.body,
     );
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
-    });
+    setAuthCookies(res, { accessToken, refreshToken });
 
     sendResponse(res, {
       success: true,
@@ -52,12 +45,7 @@ const refreshToken = catchAsync(
       req.cookies.refreshToken,
     );
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
-    });
+    res.cookie('accessToken', accessToken, accessTokenCookieOptions);
 
     sendResponse(res, {
       success: true,
@@ -72,8 +60,7 @@ const refreshToken = catchAsync(
 
 const logout = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    clearAuthCookies(res);
 
     sendResponse(res, {
       success: true,
