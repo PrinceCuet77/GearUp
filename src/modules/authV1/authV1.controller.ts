@@ -11,6 +11,7 @@ import {
   SelectableRole,
 } from '../../utils/oauthState';
 import type { AuthUser } from '../../middleware/auth';
+import { UserRole } from '../../../generated/prisma/enums';
 
 const OAUTH_STATE_COOKIE = 'oauthState';
 
@@ -100,11 +101,13 @@ const logout = catchAsync(
  * `state` param so it survives the round trip through Google, and the state's
  * nonce is mirrored into a short-lived cookie for CSRF protection.
  */
-const googleAuth = (req: Request, res: Response, next: NextFunction) => {
-  const { role, redirect } = req.query as {
-    role?: SelectableRole;
-    redirect?: string;
-  };
+const startGoogleAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  role?: SelectableRole,
+) => {
+  const { redirect } = req.query as { redirect?: string };
 
   const { state, nonce } = createOAuthState({ role, redirect });
 
@@ -123,6 +126,21 @@ const googleAuth = (req: Request, res: Response, next: NextFunction) => {
     prompt: 'select_account',
   })(req, res, next);
 };
+
+// Dedicated entry points — the role is fixed by the route itself, so the
+// customer frontend and the provider frontend each hit their own URL instead
+// of passing `role` on the query string.
+const googleAuthCustomer = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => startGoogleAuth(req, res, next, UserRole.CUSTOMER);
+
+const googleAuthProvider = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => startGoogleAuth(req, res, next, UserRole.PROVIDER);
 
 /**
  * Step 2 — Google redirects here with `?code=...&state=...`. We verify the
@@ -177,11 +195,8 @@ const googleCallback = (req: Request, res: Response, next: NextFunction) => {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
       });
 
-      // `role` here is the role actually stored on the user, which may differ
-      // from the one requested in state (existing accounts keep their role).
       return res.redirect(
         resolveFrontendRedirect(state.redirect, {
-          role: user.role,
           isNewUser: info?.isNewUser ? 'true' : undefined,
         }),
       );
@@ -194,6 +209,7 @@ export const authV1Controller = {
   loginUser,
   refreshToken,
   logout,
-  googleAuth,
+  googleAuthCustomer,
+  googleAuthProvider,
   googleCallback,
 };

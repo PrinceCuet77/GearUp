@@ -14,11 +14,9 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const googleAuthQuerySchema = z.object({
-  // ADMIN is deliberately absent — roles must never be self-grantable.
-  role: z.enum(['CUSTOMER', 'PROVIDER']).optional(),
-  // Where to send the browser once the callback finishes. Relative paths only;
-  // enforced again in resolveFrontendRedirect.
+// Used by the role-dedicated /google/customer and /google/provider entry
+// points — the role is fixed by the route, so clients only ever pass `redirect`.
+export const googleAuthRedirectQuerySchema = z.object({
   redirect: z
     .string()
     .startsWith('/', 'redirect must be a relative path')

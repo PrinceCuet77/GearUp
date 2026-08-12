@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authV1Controller } from './authV1.controller';
 import { validate } from '../../middleware/validate';
 import {
-  googleAuthQuerySchema,
+  googleAuthRedirectQuerySchema,
   loginUserSchema,
   refreshTokenSchema,
   registerUserSchema,
@@ -26,12 +26,19 @@ router.post(
 
 router.post('/logout', authV1Controller.logout);
 
-// Browser-navigated (not fetch): the frontend sends the user here with the role
-// picked on the registration screen, e.g. /google?role=PROVIDER&redirect=/dashboard
+// Role-dedicated entry points: the customer frontend hits /google/customer and
+// the provider frontend hits /google/provider, so neither has to pass `role`
+// on the query string — the route itself fixes it server-side.
 router.get(
-  '/google',
-  validate(googleAuthQuerySchema, 'query'),
-  authV1Controller.googleAuth,
+  '/google/customer',
+  validate(googleAuthRedirectQuerySchema, 'query'),
+  authV1Controller.googleAuthCustomer,
+);
+
+router.get(
+  '/google/provider',
+  validate(googleAuthRedirectQuerySchema, 'query'),
+  authV1Controller.googleAuthProvider,
 );
 
 // Public gateway-style callback — Google calls this, so no auth middleware.

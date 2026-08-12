@@ -13,8 +13,10 @@ code** — implement the frontend to match this contract exactly.
 1. **All auth calls move from `/api/auth/*` to `/api/v1/auth/*`.** The old `/api/auth`
    still exists but has no Google support and is frozen. Migrate every auth call.
 2. **A new page/route `/oauth/callback` must be created.** Google returns the user there.
-3. The existing **Customer / Provider** role tiles now also drive Google signup, by
-   passing the selected role in the URL you navigate to.
+3. The existing **Customer / Provider** role tiles now also drive Google signup, via
+   **two dedicated endpoints** — `/google/customer` and `/google/provider` — instead of
+   a shared endpoint with a `role` query param. The role is baked into which URL you
+   navigate to, not a parameter on it.
 4. Auth is **cookie-based** (httpOnly). Every request needs credentials included.
 
 ---
@@ -157,20 +159,29 @@ Clear your client auth store regardless of the outcome.
 
 ---
 
-### 3.5 `GET /api/v1/auth/google` — start Google sign-in
+### 3.5 `GET /api/v1/auth/google/customer` and `GET /api/v1/auth/google/provider` — start Google sign-in
+
+Two role-dedicated endpoints — no `role` query param. Which URL you navigate to fixes
+the role; there's no way to pass the wrong role by mistake.
 
 ```
-GET ${API_URL}/api/v1/auth/google?role=PROVIDER&redirect=/oauth/callback
+GET ${API_URL}/api/v1/auth/google/customer?redirect=/oauth/callback
+GET ${API_URL}/api/v1/auth/google/provider?redirect=/oauth/callback
 ```
 
 | Query param | Required | Notes |
 |---|---|---|
-| `role` | No | `CUSTOMER` or `PROVIDER` only. Applied **only when creating a new user**. Omit it on the login page. `400` for any other value, including `ADMIN`. |
 | `redirect` | No | Where the backend sends the browser afterwards. **Must start with `/`** (relative path) or you get a `400`. Defaults to `/oauth/callback`. |
+
+The role is only applied **when creating a brand-new user** — see §6.2 for existing
+users. On the **login page**, where there's no role tile to read, always use
+`/google/customer`; a brand-new account created from the login page defaults to
+CUSTOMER (see §6.5). Never send `ADMIN` anywhere — admins are created server-side only,
+and there is no `/google/admin` endpoint.
 
 > 🚨 **This must be a full browser navigation, never `fetch`/`axios`.**
 > ```ts
-> window.location.href = `${API_URL}/api/v1/auth/google?role=${role}`;
+> window.location.href = `${API_URL}/api/v1/auth/google/${role.toLowerCase()}`;
 > ```
 > An XHR cannot follow the redirect to Google's consent screen, and the CSRF-state
 > cookie the backend sets on this request would be discarded. A plain `<a href>` also
@@ -301,24 +312,26 @@ users.
 The existing Customer/Provider selector already holds the role. Wire it in:
 
 ```tsx
-const [role, setRole] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
+const [role, setRole] = useState<'customer' | 'provider'>('customer');
 
-// Registration page
+// Registration page — role picks the endpoint, not a query param
 <button
   type="button"
   onClick={() => {
     window.location.href =
-      `${API}/api/v1/auth/google?role=${role}&redirect=/oauth/callback`;
+      `${API}/api/v1/auth/google/${role}?redirect=/oauth/callback`;
   }}
 >
   Continue with Google
 </button>
 
-// Login page — no role, the stored one is used
+// Login page — no role tile here, so always hit /google/customer.
+// For an EXISTING user this is a no-op (their stored role always wins, see §6.2);
+// for a brand-new user it just means "created as CUSTOMER by default" (§6.5).
 <button
   type="button"
   onClick={() => {
-    window.location.href = `${API}/api/v1/auth/google?redirect=/oauth/callback`;
+    window.location.href = `${API}/api/v1/auth/google/customer?redirect=/oauth/callback`;
   }}
 >
   Continue with Google
@@ -326,7 +339,8 @@ const [role, setRole] = useState<'CUSTOMER' | 'PROVIDER'>('CUSTOMER');
 ```
 
 The role does **not** need to be stored in localStorage or app state across the
-redirect — the backend carries it through Google in a signed parameter.
+redirect — it's fixed by which endpoint you navigated to, and the backend carries it
+through Google in a signed `state` parameter from there.
 
 ### 5.4 New route: `/oauth/callback`
 
@@ -395,9 +409,10 @@ Prefer hiding the change-password UI when the user has no password — but the f
 isn't exposed in the API, so handling the 400 gracefully is the practical answer.
 
 ### 6.5 New Google user on the login page
-No `role` is sent, so they're created as **CUSTOMER**. Acceptable default. If you'd
-rather force an explicit choice, ask the backend to add a role-onboarding endpoint —
-don't try to patch around it client-side.
+The login page's Google button hits `/google/customer` (§5.3), so a brand-new account
+is created as **CUSTOMER**. Acceptable default. If you'd rather force an explicit
+choice, ask the backend to add a role-onboarding endpoint — don't try to patch around
+it client-side.
 
 ---
 
@@ -408,7 +423,7 @@ don't try to patch around it client-side.
 | Login succeeds but `/me` 401s straight after | Missing `credentials: 'include'` — or, in production, the backend cookie flags (see below). Verify with DevTools → Application → Cookies. |
 | CORS error when clicking Google | You used `fetch` instead of `window.location.href`. |
 | `redirect_uri_mismatch` on Google's page | Backend `.env` / Google Console issue, not frontend. Report it. |
-| `400 "role: Invalid option"` | You sent `ADMIN`, lowercase, or a non-enum value. |
+| Google signup created the wrong role | You hit `/google/customer` from the Provider tile (or vice versa) — double-check which endpoint the button navigates to. |
 | `400 "You have provided incorrect field type or missing fields"` on register | You omitted `role`. |
 | `?error=invalid_oauth_state` every time | Cookies blocked, or >10 min on the consent screen. Try a non-incognito window before reporting. |
 
@@ -427,8 +442,9 @@ request will 401.** If that happens, it is a backend fix — do not work around 
 - [ ] `credentials: 'include'` / `withCredentials: true` globally
 - [ ] Register sends `role` from the selected tile, then logs the user in
 - [ ] Login handles all five error cases in §3.2, incl. the Google-only 401
-- [ ] Google buttons on both register (with `role`) and login (without) use a full
-      page navigation
+- [ ] Register's Google buttons hit `/google/customer` or `/google/provider` to match
+      the selected tile; login's Google button always hits `/google/customer`. All as
+      a full page navigation, never `fetch`/`axios`
 - [ ] Public `/oauth/callback` route: reads `error` / `isNewUser`, fetches `/me`,
       routes by the **server** role, uses `replace: true`
 - [ ] Login page surfaces `?error=`
