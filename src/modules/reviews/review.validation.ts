@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(10).optional(),
+  search: z.string().min(1).optional(),
   sortBy: z.enum(['createdAt', 'rating']).default('createdAt').optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
 });

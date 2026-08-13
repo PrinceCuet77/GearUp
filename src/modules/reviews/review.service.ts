@@ -1,10 +1,15 @@
+import { Prisma } from '../../../generated/prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   NotFoundError,
   BadRequestError,
   ForbiddenError,
 } from '../../errors/ApiError';
-import { ICreateReviewPayload, IUpdateReviewPayload } from './review.interface';
+import {
+  ICreateReviewPayload,
+  IUpdateReviewPayload,
+  IGetMyReviewsQuery,
+} from './review.interface';
 
 const createReview = async (
   customerId: string,
@@ -224,25 +229,27 @@ const deleteReview = async (customerId: string, reviewId: string) => {
   return existingReview;
 };
 
-const getMyReviews = async (
-  customerId: string,
-  query: {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sortOrder?: string;
-  },
-) => {
+const getMyReviews = async (customerId: string, query: IGetMyReviewsQuery) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
+  const search = query.search;
   const sortBy = query.sortBy || 'createdAt';
   const sortOrder = query.sortOrder || 'desc';
 
   const skip = (page - 1) * limit;
 
+  const where: Prisma.ReviewWhereInput = { customerId };
+
+  if (search) {
+    where.OR = [
+      { comment: { contains: search, mode: 'insensitive' } },
+      { gearItem: { name: { contains: search, mode: 'insensitive' } } },
+    ];
+  }
+
   // Find distinct rental order IDs reviewed by this customer
   const reviewedRentals = await prisma.review.findMany({
-    where: { customerId },
+    where,
     select: { rentalOrderId: true },
     distinct: ['rentalOrderId'],
   });
@@ -254,7 +261,7 @@ const getMyReviews = async (
   // Get one review per rental order
   const reviews = await prisma.review.findMany({
     where: {
-      customerId,
+      ...where,
       rentalOrderId: { in: rentalOrderIds },
     },
     distinct: ['rentalOrderId'],

@@ -454,12 +454,13 @@ Base URL: `https://gear-up-self.vercel.app/api`
 
 ### Reviews (`/api/reviews`)
 
-| Method | Endpoint     | Body/Query                           | Auth     | Description      |
-| ------ | ------------ | ------------------------------------ | -------- | ---------------- |
-| POST   | `/`          | `{ rentalOrderId, rating, comment }` | CUSTOMER | Create review    |
-| GET    | `/:reviewId` | –                                    | CUSTOMER | Get review by ID |
-| PATCH  | `/:reviewId` | `{ rating?, comment? }`              | CUSTOMER | Update review    |
-| DELETE | `/:reviewId` | –                                    | CUSTOMER | Delete review    |
+| Method | Endpoint     | Body/Query                                                | Auth     | Description         |
+| ------ | ------------ | ---------------------------------------------------------- | -------- | -------------------- |
+| GET    | `/`          | Query: `{ page?, limit?, search?, sortBy?, sortOrder? }`    | CUSTOMER | Get my reviews        |
+| POST   | `/`          | `{ rentalOrderId, rating, comment }`                        | CUSTOMER | Create review         |
+| GET    | `/:reviewId` | –                                                            | CUSTOMER | Get review by ID      |
+| PATCH  | `/:reviewId` | `{ rating?, comment? }`                                      | CUSTOMER | Update review         |
+| DELETE | `/:reviewId` | –                                                            | CUSTOMER | Delete review         |
 
 ## Error Response Format
 
