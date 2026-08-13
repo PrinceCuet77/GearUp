@@ -256,6 +256,159 @@ const getAllGears = async (query: {
   };
 };
 
+const getAllRentals = async (query: {
+  status?: string;
+  customerId?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: string | number;
+  maxAmount?: string | number;
+  page?: string | number;
+  limit?: string | number;
+  sortBy?: string;
+  sortOrder?: string;
+}) => {
+  const {
+    status,
+    customerId,
+    search,
+    startDate,
+    endDate,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = query;
+
+  const minAmount =
+    query.minAmount !== undefined ? Number(query.minAmount) : undefined;
+  const maxAmount =
+    query.maxAmount !== undefined ? Number(query.maxAmount) : undefined;
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+
+  const where: Prisma.RentalOrderWhereInput = {};
+
+  if (status) {
+    where.status = status as any;
+  }
+
+  if (customerId) {
+    where.customerId = String(customerId);
+  }
+
+  if (search) {
+    where.customer = {
+      OR: [
+        { name: { contains: String(search), mode: 'insensitive' } },
+        { email: { contains: String(search), mode: 'insensitive' } },
+      ],
+    };
+  }
+
+  if (startDate || endDate) {
+    where.startDate = {};
+
+    if (startDate) {
+      where.startDate.gte = new Date(startDate);
+    }
+
+    if (endDate) {
+      where.startDate.lte = new Date(endDate);
+    }
+  }
+
+  if (minAmount !== undefined || maxAmount !== undefined) {
+    where.amount = {};
+
+    if (minAmount !== undefined) {
+      where.amount.gte = minAmount;
+    }
+
+    if (maxAmount !== undefined) {
+      where.amount.lte = maxAmount;
+    }
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [data, total, statusCounts] = await Promise.all([
+    prisma.rentalOrder.findMany({
+      where,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            gearItem: {
+              select: {
+                id: true,
+                name: true,
+                images: true,
+                provider: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        payments: {
+          select: {
+            id: true,
+            transactionId: true,
+            amount: true,
+            status: true,
+            paidAt: true,
+          },
+        },
+      },
+      orderBy: {
+        [sortBy as string]: sortOrder,
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.rentalOrder.count({ where }),
+    prisma.rentalOrder.groupBy({
+      by: ['status'],
+      _count: true,
+    }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  const totalRentals = statusCounts.reduce(
+    (sum, entry) => sum + entry._count,
+    0,
+  );
+
+  return {
+    data,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      totalRentals,
+      statusCounts: statusCounts.reduce(
+        (acc, entry) => {
+          acc[entry.status] = entry._count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    },
+  };
+};
+
 const getAdminDashboard = async () => {
   const [totalUsers, activeGears, totalRentals, totalCategories] =
     await Promise.all([
@@ -283,5 +436,6 @@ export const adminService = {
   updateCategory,
   getCategoryById,
   getAllGears,
+  getAllRentals,
   getAdminDashboard,
 };

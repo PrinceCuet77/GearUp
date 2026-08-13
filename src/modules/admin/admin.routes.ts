@@ -9,6 +9,7 @@ import {
   updateCategorySchema,
   getAllGearsQuerySchema,
   getAllUsersQuerySchema,
+  getAllRentalsQuerySchema,
 } from './admin.validation';
 
 const router = Router();
@@ -58,6 +59,13 @@ router.get(
   auth(UserRole.ADMIN),
   validate(getAllGearsQuerySchema, 'query'),
   adminController.getAllGears,
+);
+
+router.get(
+  '/rentals',
+  auth(UserRole.ADMIN),
+  validate(getAllRentalsQuerySchema, 'query'),
+  adminController.getAllRentals,
 );
 
 router.get(

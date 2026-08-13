@@ -107,6 +107,31 @@ const getAllGears = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllRentals = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query as {
+    status?: string;
+    customerId?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+  };
+  const result = await adminService.getAllRentals(query);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: 'Rental orders retrieved successfully',
+    data: result.data,
+    meta: result.meta,
+  });
+});
+
 const getAdminDashboard = catchAsync(async (req: Request, res: Response) => {
   const data = await adminService.getAdminDashboard();
 
@@ -126,5 +151,6 @@ export const adminController = {
   updateCategory,
   getCategoryById,
   getAllGears,
+  getAllRentals,
   getAdminDashboard,
 };
